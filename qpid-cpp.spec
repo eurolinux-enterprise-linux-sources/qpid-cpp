@@ -42,13 +42,13 @@
 #  5. If any interfaces have been added since the last public release, then increment age.
 #  6. If any interfaces have been removed or changed since the last public release, then set age to 0. 
 
-%global QPIDCOMMON_VERSION_INFO             6:0:0
-%global QPIDTYPES_VERSION_INFO              3:0:2
-%global QPIDBROKER_VERSION_INFO             6:0:0
-%global QPIDCLIENT_VERSION_INFO             6:0:0
-%global QPIDMESSAGING_VERSION_INFO          5:0:2
-%global RDMAWRAP_VERSION_INFO               6:0:0
-%global SSLCOMMON_VERSION_INFO              6:0:0
+%global QPIDCOMMON_VERSION_INFO             7:0:0
+%global QPIDTYPES_VERSION_INFO              3:1:2
+%global QPIDBROKER_VERSION_INFO             7:0:0
+%global QPIDCLIENT_VERSION_INFO             7:0:0
+%global QPIDMESSAGING_VERSION_INFO          5:1:2
+%global RDMAWRAP_VERSION_INFO               7:0:0
+%global SSLCOMMON_VERSION_INFO              7:0:0
 
 # ===========
 
@@ -75,7 +75,7 @@
 
 Name:           qpid-cpp
 Version:        0.14
-Release:        16%{?dist}
+Release:        22%{?dist}
 Summary:        Libraries for Qpid C++ client applications
 Group:          System Environment/Libraries
 License:        ASL 2.0
@@ -803,6 +803,22 @@ rm -rf %{buildroot}
 # ===
 
 %changelog
+* Thu Sep 6 2012 Mike Cressman <mcressman@redhat.com> - 0.14-22
+- BZs: 609685, 849654, 854004 
+
+* Mon Aug 13 2012 Mike Cressman <mcressman@redhat.com> - 0.14-21
+- BZs: 831365, 840982, 844618
+
+* Wed Aug 1 2012 Mike Cressman <mcressman@redhat.com> - 0.14-20
+- BZs: 683711, 689408, 825078, 834608, 841196, 841488
+
+* Mon Jul 23 2012 Mike Cressman <mcressman@redhat.com> - 0.14-19
+- BZs: 609685, 683711, 693444, 707682, 729311, 801465, 808090,
+       809357, 811481, 817283, 826989, 831365, 835628
+
+* Fri Jul 13 2012 Irina Boverman <iboverma@redhat.com> - 0.14-18
+- BZs: 609685, 729311, 808090, 809357, 817283
+
 * Tue Apr 24 2012 Ted Ross <tross@redhat.com> - 0.14-16
 - Related: rhbz#703563
 - Related: rhbz#771961
