@@ -187,6 +187,7 @@ class SessionState : public qpid::SessionState,
     class AsyncCommandCompleter : public RefCounted {
     private:
         SessionState *session;
+        bool isAttached;
         qpid::sys::Mutex completerLock;
 
         // special-case message.transfer commands for optimization
@@ -198,6 +199,10 @@ class SessionState : public qpid::SessionState,
         : cmd(c), requiresAccept(a), requiresSync(s) {}
         };
         std::vector<MessageInfo> completedMsgs;
+        // If an ingress message does not require a Sync, we need to
+        // hold a reference to it in case an Execution.Sync command is received and we
+        // have to manually flush the message.
+        std::map<SequenceNumber, boost::intrusive_ptr<Message> > pendingMsgs;
 
         /** complete all pending commands, runs in IO thread */
         void completeCommands();
@@ -205,15 +210,21 @@ class SessionState : public qpid::SessionState,
         /** for scheduling a run of "completeCommands()" on the IO thread */
         static void schedule(boost::intrusive_ptr<AsyncCommandCompleter>);
 
-  public:
-        AsyncCommandCompleter(SessionState *s) : session(s) {};
+    public:
+        AsyncCommandCompleter(SessionState *s) : session(s), isAttached(s->isAttached()) {};
         ~AsyncCommandCompleter() {};
 
-        /** schedule the completion of an ingress message.transfer command */
+        /** track a message pending ingress completion */
+        void addPendingMessage(boost::intrusive_ptr<Message> m);
+        void deletePendingMessage(SequenceNumber id);
+        void flushPendingMessages();
+        /** schedule the processing of a completed ingress message.transfer command */
         void scheduleMsgCompletion(SequenceNumber cmd,
                                    bool requiresAccept,
                                    bool requiresSync);
         void cancel();  // called by SessionState destructor.
+        void attached();  // called by SessionState on attach()
+        void detached();  // called by SessionState on detach()
     };
     boost::intrusive_ptr<AsyncCommandCompleter> asyncCommandCompleter;
 
@@ -240,20 +251,30 @@ class SessionState : public qpid::SessionState,
         IncompleteIngressMsgXfer( SessionState *ss,
                                   boost::intrusive_ptr<Message> m )
           : AsyncCommandContext(ss, m->getCommandId()),
-            session(ss),
-            msg(m.get()),
-            requiresAccept(msg->requiresAccept()),
-            requiresSync(msg->getFrames().getMethod()->isSync()) {};
-        virtual ~IncompleteIngressMsgXfer() {};
+          session(ss),
+          msg(m),
+          requiresAccept(m->requiresAccept()),
+          requiresSync(m->getFrames().getMethod()->isSync()),
+          pending(false) {}
+        IncompleteIngressMsgXfer( const IncompleteIngressMsgXfer& x )
+          : AsyncCommandContext(x.session, x.msg->getCommandId()),
+          session(x.session),
+          msg(x.msg),
+          requiresAccept(x.requiresAccept),
+          requiresSync(x.requiresSync),
+          pending(x.pending) {}
+
+  virtual ~IncompleteIngressMsgXfer() {};
 
         virtual void completed(bool);
         virtual boost::intrusive_ptr<AsyncCompletion::Callback> clone();
 
      private:
-        SessionState *session;  // only valid if sync == true
-        Message *msg;           // only valid if sync == true
+        SessionState *session;  // only valid if sync flag in callback is true
+        boost::intrusive_ptr<Message> msg;
         bool requiresAccept;
         bool requiresSync;
+        bool pending;   // true if msg saved on pending list...
     };
 
     friend class SessionManager;

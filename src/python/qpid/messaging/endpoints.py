@@ -158,6 +158,7 @@ class Connection(Endpoint):
     self.reconnect_log = options.get("reconnect_log", True)
 
     self.address_ttl = options.get("address_ttl", 60)
+    self.tcp_nodelay = options.get("tcp_nodelay", False)
 
     self.options = options
 
@@ -1006,9 +1007,9 @@ class Receiver(Endpoint, object):
       self.draining = True
       self._wakeup()
       self._ecwait(lambda: not self.draining)
+      msg = self.session._get(self, timeout=0)
       self._grant()
       self._wakeup()
-      msg = self.session._get(self, timeout=0)
       if msg is None:
         raise Empty()
     elif self._capacity not in (0, UNLIMITED.value):

@@ -96,7 +96,7 @@ MACRO (add_msvc_version_full verProject verProjectType verProjectFileExt verFN1 
         inherit_value ("winver_${verProject}_InternalName"         "${verProject}")
         inherit_value ("winver_${verProject}_OriginalFilename"     "${verProject}.${verProjectFileExt}")
         inherit_value ("winver_${verProject}_ProductName"          "${winver_DESCRIPTION_SUMMARY}")
-        
+
         # Create strings to be substituted into the template file
         set ("winverFileVersionBinary"     "${winver_${verProject}_FileVersionBinary}")
         set ("winverProductVersionBinary"  "${winver_${verProject}_ProductVersionBinary}")
@@ -126,7 +126,7 @@ ENDMACRO (add_msvc_version_full)
 #
 MACRO (add_msvc_version verProject verProjectType verProjectFileExt)
     if (MSVC)
-        add_msvc_version_full (${verProject} 
+        add_msvc_version_full (${verProject}
                                ${verProjectType}
                                ${verProjectFileExt}
                                ${winver_FILE_VERSION_N1}
@@ -636,8 +636,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL Windows)
   )
 
   set (qpidcommon_platform_LIBS
-    ${windows_ssl_libs} ws2_32
-  )
+    ${Boost_THREAD_LIBRARY} ${windows_ssl_libs} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ws2_32  )
   set (qpidbroker_platform_SOURCES
     qpid/broker/windows/BrokerDefaults.cpp
     qpid/broker/windows/SaslAuthenticator.cpp
@@ -657,7 +656,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL Windows)
   set (qpidd_platform_SOURCES
     windows/QpiddBroker.cpp
   )
-  
+
   set (qpidmessaging_platform_SOURCES
      qpid/messaging/HandleInstantiator.cpp
   )
@@ -938,7 +937,7 @@ if (NOT QPID_GENERATED_HEADERS_IN_SOURCE)
 endif (NOT QPID_GENERATED_HEADERS_IN_SOURCE)
 
 
-if (WIN32)
+if (MSVC)
     # Install the DtcPlugin project and call it qpidxarm.
     set(AMQP_WCF_DIR ${qpid-cpp_SOURCE_DIR}/../wcf)
     set(qpidxarm_SOURCES ${AMQP_WCF_DIR}/src/Apache/Qpid/DtcPlugin/DtcPlugin.cpp)
@@ -951,7 +950,7 @@ if (WIN32)
                  COMPONENT ${QPID_COMPONENT_CLIENT})
         install_pdb (qpidxarm ${QPID_COMPONENT_CLIENT})
     endif (EXISTS ${qpidxarm_SOURCES})
-endif (WIN32)
+endif (MSVC)
 
 set (qpidbroker_SOURCES
      ${mgen_broker_cpp}
@@ -998,7 +997,6 @@ set (qpidbroker_SOURCES
      qpid/broker/QueuePolicy.cpp
      qpid/broker/QueueRegistry.cpp
      qpid/broker/QueueFlowLimit.cpp
-     qpid/broker/RateTracker.cpp
      qpid/broker/RecoveryManagerImpl.cpp
      qpid/broker/RecoveredEnqueue.cpp
      qpid/broker/RecoveredDequeue.cpp

@@ -75,6 +75,12 @@ void TimerTask::cancel() {
     cancelled = true;
 }
 
+void TimerTask::setFired() {
+    // Set nextFireTime to just before now, making readyToFire() true.
+    nextFireTime = AbsTime(sys::now(), Duration(-1));
+}
+
+
 Timer::Timer() :
     active(false),
     late(50 * TIME_MSEC),
@@ -185,7 +191,11 @@ void Timer::stop()
 
 // Allow subclasses to override behavior when firing a task.
 void Timer::fire(boost::intrusive_ptr<TimerTask> t) {
-    t->fireTask();
+    try {
+        t->fireTask();
+    } catch (const std::exception& e) {
+        QPID_LOG(error, "Exception thrown by timer task " << t->getName() << ": " << e.what());
+    }
 }
 
 // Provided for subclasses: called when a task is droped.

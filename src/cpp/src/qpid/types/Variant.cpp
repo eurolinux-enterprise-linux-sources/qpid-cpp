@@ -111,11 +111,24 @@ class VariantImpl
     template<class T> T convertFromString() const
     {
         std::string* s = reinterpret_cast<std::string*>(value.v);
-        try {
-            return boost::lexical_cast<T>(*s);
-        } catch(const boost::bad_lexical_cast&) {
-            throw InvalidConversion(QPID_MSG("Cannot convert " << *s));
+        if (std::numeric_limits<T>::is_signed || s->find('-') != 0) {
+            //lexical_cast won't fail if string is a negative number and T is unsigned
+            try {
+                return boost::lexical_cast<T>(*s);
+            } catch(const boost::bad_lexical_cast&) {
+                //don't return, throw exception below
+            }
+        } else {
+            //T is unsigned and number starts with '-'
+            try {
+                //handle special case of negative zero
+                if (boost::lexical_cast<int>(*s) == 0) return 0;
+                //else its a non-zero negative number so throw exception at end of function
+            } catch(const boost::bad_lexical_cast&) {
+                //wasn't a valid int, therefore not a valid uint
+            }
         }
+        throw InvalidConversion(QPID_MSG("Cannot convert " << *s));
     }
 };
 
@@ -369,11 +382,11 @@ int8_t VariantImpl::asInt8() const
               return int8_t(value.ui16);
           break;
       case VAR_UINT32:
-          if (value.ui32 <= (uint) std::numeric_limits<int8_t>::max())
+          if (value.ui32 <= (uint32_t) std::numeric_limits<int8_t>::max())
               return int8_t(value.ui32);
           break;
       case VAR_UINT64:
-          if (value.ui64 <= (uint) std::numeric_limits<int8_t>::max())
+          if (value.ui64 <= (uint64_t) std::numeric_limits<int8_t>::max())
               return int8_t(value.ui64);
           break;
       case VAR_STRING: return convertFromString<int8_t>();
@@ -400,11 +413,11 @@ int16_t VariantImpl::asInt16() const
               return int16_t(value.ui16);
           break;
       case VAR_UINT32:
-          if (value.ui32 <= (uint) std::numeric_limits<int16_t>::max())
+          if (value.ui32 <= (uint32_t) std::numeric_limits<int16_t>::max())
               return int16_t(value.ui32);
           break;
       case VAR_UINT64:
-          if (value.ui64 <= (uint) std::numeric_limits<int16_t>::max())
+          if (value.ui64 <= (uint64_t) std::numeric_limits<int16_t>::max())
               return int16_t(value.ui64);
           break;
       case VAR_STRING: return convertFromString<int16_t>();
@@ -429,7 +442,7 @@ int32_t VariantImpl::asInt32() const
               return int32_t(value.ui32);
           break;
       case VAR_UINT64:
-        if (value.ui64 <= (uint32_t) std::numeric_limits<int32_t>::max())
+        if (value.ui64 <= (uint64_t) std::numeric_limits<int32_t>::max())
               return int32_t(value.ui64);
           break;
       case VAR_STRING: return convertFromString<int32_t>();

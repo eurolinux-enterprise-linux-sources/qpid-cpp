@@ -19,6 +19,11 @@
  *
  */
 
+// Ensure we get all of winsock2.h
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
+
 #include "qpid/sys/SocketAddress.h"
 
 #include "qpid/sys/windows/check.h"
@@ -58,7 +63,7 @@ SocketAddress::~SocketAddress()
     ::freeaddrinfo(addrInfo);
 }
 
-std::string SocketAddress::asString() const
+std::string SocketAddress::asString(bool) const
 {
     return host + ":" + port;
 }

@@ -153,11 +153,11 @@ Broker::Options::Options(const std::string& name) :
         ("tcp-nodelay", optValue(tcpNoDelay), "Set TCP_NODELAY on TCP connections")
         ("require-encryption", optValue(requireEncrypted), "Only accept connections that are encrypted")
         ("known-hosts-url", optValue(knownHosts, "URL or 'none'"), "URL to send as 'known-hosts' to clients ('none' implies empty list)")
-        ("sasl-config", optValue(saslConfigPath, "FILE"), "gets sasl config from nonstandard location")
+        ("sasl-config", optValue(saslConfigPath, "DIR"), "gets sasl config info from nonstandard location")
         ("max-session-rate", optValue(maxSessionRate, "MESSAGES/S"), "Sets the maximum message rate per session (0=unlimited)")
         ("async-queue-events", optValue(asyncQueueEvents, "yes|no"), "Set Queue Events async, used for services like replication")
-        ("default-flow-stop-threshold", optValue(queueFlowStopRatio, "%MESSAGES"), "Queue capacity level at which flow control is activated.")
-        ("default-flow-resume-threshold", optValue(queueFlowResumeRatio, "%MESSAGES"), "Queue capacity level at which flow control is de-activated.")
+        ("default-flow-stop-threshold", optValue(queueFlowStopRatio, "PERCENT"), "Percent of queue's maximum capacity at which flow control is activated.")
+        ("default-flow-resume-threshold", optValue(queueFlowResumeRatio, "PERCENT"), "Percent of queue's maximum capacity at which flow control is de-activated.")
         ("default-event-threshold-ratio", optValue(queueThresholdEventRatio, "%age of limit"), "The ratio of any specified queue limit at which an event will be raised");
 }
 
@@ -188,7 +188,7 @@ Broker::Broker(const Broker::Options& conf) :
             conf.replayFlushLimit*1024, // convert kb to bytes.
             conf.replayHardLimit*1024),
         *this),
-    queueCleaner(queues, timer),
+    queueCleaner(queues, &timer),
     queueEvents(poller,!conf.asyncQueueEvents),
     recovery(true),
     inCluster(false),
@@ -248,13 +248,7 @@ Broker::Broker(const Broker::Options& conf) :
     // Early-Initialize plugins
     Plugin::earlyInitAll(*this);
 
-    /** todo KAG - remove once cluster support for flow control done */
-    if (isInCluster()) {
-        QPID_LOG(info, "Producer Flow Control TBD for clustered brokers - queue flow control disabled by default.");
-        QueueFlowLimit::setDefaults(0, 0, 0);
-    } else {
-        QueueFlowLimit::setDefaults(conf.queueLimit, conf.queueFlowStopRatio, conf.queueFlowResumeRatio);
-    }
+    QueueFlowLimit::setDefaults(conf.queueLimit, conf.queueFlowStopRatio, conf.queueFlowResumeRatio);
 
     // If no plugin store module registered itself, set up the null store.
     if (NullMessageStore::isNullStore(store.get()))
@@ -707,7 +701,7 @@ void Broker::accept() {
 }
 
 void Broker::connect(
-    const std::string& host, uint16_t port, const std::string& transport,
+    const std::string& host, const std::string& port, const std::string& transport,
     boost::function2<void, int, std::string> failed,
     sys::ConnectionCodec::Factory* f)
 {
@@ -723,7 +717,7 @@ void Broker::connect(
 {
     url.throwIfEmpty();
     const Address& addr=url[0];
-    connect(addr.host, addr.port, addr.protocol, failed, f);
+    connect(addr.host, boost::lexical_cast<std::string>(addr.port), addr.protocol, failed, f);
 }
 
 uint32_t Broker::queueMoveMessages(
@@ -756,6 +750,7 @@ bool Broker::deferDeliveryImpl(const std::string& ,
 
 void Broker::setClusterTimer(std::auto_ptr<sys::Timer> t) {
     clusterTimer = t;
+    queueCleaner.setTimer(clusterTimer.get());
 }
 
 const std::string Broker::TCP_TRANSPORT("tcp");

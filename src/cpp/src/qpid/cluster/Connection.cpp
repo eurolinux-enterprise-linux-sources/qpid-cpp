@@ -35,6 +35,7 @@
 #include "qpid/broker/Fairshare.h"
 #include "qpid/broker/Link.h"
 #include "qpid/broker/Bridge.h"
+#include "qpid/broker/StatefulQueueObserver.h"
 #include "qpid/broker/Queue.h"
 #include "qpid/framing/enum.h"
 #include "qpid/framing/AMQFrame.h"
@@ -78,7 +79,7 @@ const std::string shadowPrefix("[shadow]");
 Connection::Connection(Cluster& c, sys::ConnectionOutputHandler& out,
                        const std::string& mgmtId,
                        const ConnectionId& id, const qpid::sys::SecuritySettings& external)
-    : cluster(c), self(id), catchUp(false), output(*this, out),
+    : cluster(c), self(id), catchUp(false), announced(false), output(*this, out),
       connectionCtor(&output, cluster.getBroker(), mgmtId, external, false, 0, true),
       expectProtocolHeader(false),
       mcastFrameHandler(cluster.getMulticast(), self),
@@ -90,7 +91,7 @@ Connection::Connection(Cluster& c, sys::ConnectionOutputHandler& out,
 Connection::Connection(Cluster& c, sys::ConnectionOutputHandler& out,
                        const std::string& mgmtId, MemberId member,
                        bool isCatchUp, bool isLink, const qpid::sys::SecuritySettings& external
-) : cluster(c), self(member, ++idCounter), catchUp(isCatchUp), output(*this, out),
+) : cluster(c), self(member, ++idCounter), catchUp(isCatchUp), announced(false), output(*this, out),
     connectionCtor(&output, cluster.getBroker(),
                    mgmtId,
                    external,
@@ -255,7 +256,7 @@ void Connection::deliveredFrame(const EventFrame& f) {
     }
 }
 
-// A local connection is closed by the network layer.
+// A local connection is closed by the network layer. Called in the connection thread.
 void Connection::closed() {
     try {
         if (isUpdated()) {
@@ -272,8 +273,9 @@ void Connection::closed() {
             // closed and process any outstanding frames from the cluster
             // until self-delivery of deliver-close.
             output.closeOutput();
-            cluster.getMulticast().mcastControl(
-                ClusterConnectionDeliverCloseBody(), self);
+            if (announced)
+                cluster.getMulticast().mcastControl(
+                    ClusterConnectionDeliverCloseBody(), self);
         }
     }
     catch (const std::exception& e) {
@@ -320,10 +322,10 @@ size_t Connection::decode(const char* data, size_t size) {
         while (localDecoder.decode(buf))
             received(localDecoder.getFrame());
         if (!wasOpen && connection->isOpen()) {
-            // Connections marked as federation links are allowed to proxy
+            // Connections marked with setUserProxyAuth are allowed to proxy
             // messages with user-ID that doesn't match the connection's
             // authenticated ID. This is important for updates.
-            connection->setFederationLink(isCatchUp());
+            connection->setUserProxyAuth(isCatchUp());
         }
     }
     else {                      // Multicast local connections.
@@ -384,6 +386,7 @@ void Connection::processInitialFrames(const char*& ptr, size_t size) {
                 connection->getUserId(),
                 initialFrames),
             getId());
+        announced = true;
         initialFrames.clear();
     }
 }
@@ -556,8 +559,46 @@ void Connection::queueFairshareState(const std::string& qname, const uint8_t pri
     }
 }
 
-void Connection::expiryId(uint64_t id) {
-    cluster.getExpiryPolicy().setId(id);
+
+namespace {
+    // find a StatefulQueueObserver that matches a given identifier
+    class ObserverFinder {
+        const std::string id;
+        boost::shared_ptr<broker::QueueObserver> target;
+        ObserverFinder(const ObserverFinder&) {}
+    public:
+        ObserverFinder(const std::string& _id) : id(_id) {}
+        broker::StatefulQueueObserver *getObserver()
+        {
+            if (target)
+                return dynamic_cast<broker::StatefulQueueObserver *>(target.get());
+            return 0;
+        }
+        void operator() (boost::shared_ptr<broker::QueueObserver> o)
+        {
+            if (!target) {
+                broker::StatefulQueueObserver *p = dynamic_cast<broker::StatefulQueueObserver *>(o.get());
+                if (p && p->getId() == id) {
+                    target = o;
+                }
+            }
+        }
+    };
+}
+
+
+void Connection::queueObserverState(const std::string& qname, const std::string& observerId, const FieldTable& state)
+{
+    boost::shared_ptr<broker::Queue> queue(findQueue(qname));
+    ObserverFinder finder(observerId);      // find this observer
+    queue->eachObserver<ObserverFinder &>(finder);
+    broker::StatefulQueueObserver *so = finder.getObserver();
+    if (so) {
+        so->setState( state );
+        QPID_LOG(debug, "updated queue observer " << observerId << "'s state on queue " << qname << "; ...");
+        return;
+    }
+    QPID_LOG(error, "Failed to find observer " << observerId << " state on queue " << qname << "; this will result in inconsistencies.");
 }
 
 std::ostream& operator<<(std::ostream& o, const Connection& c) {
@@ -679,5 +720,16 @@ void Connection::doCatchupIoCallbacks() {
 
     if (catchUp) getBrokerConnection()->doIoCallbacks();
 }
+
+void Connection::clock(uint64_t time) {
+    QPID_LOG(debug, "Cluster connection received time update");
+    cluster.clock(time);
+}
+
+void Connection::queueDequeueSincePurgeState(const std::string& qname, uint32_t dequeueSincePurge) {
+    boost::shared_ptr<broker::Queue> queue(findQueue(qname));
+    queue->setDequeueSincePurge(dequeueSincePurge);
+}
+
 }} // Namespace qpid::cluster
 

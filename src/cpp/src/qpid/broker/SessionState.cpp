@@ -25,6 +25,7 @@
 #include "qpid/broker/SessionManager.h"
 #include "qpid/broker/SessionHandler.h"
 #include "qpid/broker/RateFlowcontrol.h"
+#include "qpid/sys/ClusterSafe.h"
 #include "qpid/sys/Timer.h"
 #include "qpid/framing/AMQContentBody.h"
 #include "qpid/framing/AMQHeaderBody.h"
@@ -95,14 +96,13 @@ void SessionState::addManagementObject() {
 }
 
 SessionState::~SessionState() {
+    asyncCommandCompleter->cancel();
     semanticState.closed();
     if (mgmtObject != 0)
         mgmtObject->resourceDestroy ();
 
     if (flowControlTimer)
         flowControlTimer->cancel();
-
-    asyncCommandCompleter->cancel();
 }
 
 AMQP_ClientProxy& SessionState::getProxy() {
@@ -127,6 +127,7 @@ bool SessionState::isLocal(const ConnectionToken* t) const
 
 void SessionState::detach() {
     QPID_LOG(debug, getId() << ": detached on broker.");
+    asyncCommandCompleter->detached();
     disableOutput();
     handler = 0;
     if (mgmtObject != 0)
@@ -147,6 +148,7 @@ void SessionState::attach(SessionHandler& h) {
         mgmtObject->set_connectionRef (h.getConnection().GetManagementObject()->getObjectId());
         mgmtObject->set_channelId (h.getChannel());
     }
+    asyncCommandCompleter->attached();
 }
 
 void SessionState::abort() {
@@ -321,6 +323,11 @@ void SessionState::completeRcvMsg(SequenceNumber id,
                                   bool requiresAccept,
                                   bool requiresSync)
 {
+    // Mark this as a cluster-unsafe scope since it can be called in
+    // journal threads or connection threads as part of asynchronous
+    // command completion.
+    sys::ClusterUnsafeScope cus;
+
     bool callSendCompletion = false;
     receiverCompleted(id);
     if (requiresAccept)
@@ -426,6 +433,7 @@ void SessionState::addPendingExecutionSync()
     if (receiverGetIncomplete().front() < syncCommandId) {
         currentCommandComplete = false;
         pendingExecutionSyncs.push(syncCommandId);
+        asyncCommandCompleter->flushPendingMessages();
         QPID_LOG(debug, getId() << ": delaying completion of execution.sync " << syncCommandId);
     }
 }
@@ -437,8 +445,18 @@ void SessionState::addPendingExecutionSync()
 boost::intrusive_ptr<AsyncCompletion::Callback>
 SessionState::IncompleteIngressMsgXfer::clone()
 {
-    boost::intrusive_ptr<SessionState::IncompleteIngressMsgXfer> cb(new SessionState::IncompleteIngressMsgXfer(session, msg));
-    return cb;
+    // Optimization: this routine is *only* invoked when the message needs to be asynchronously completed.
+    // If the client is pending the message.transfer completion, flush now to force immediate write to journal.
+    if (requiresSync)
+        msg->flush();
+    else {
+        // otherwise, we need to track this message in order to flush it if an execution.sync arrives
+        // before it has been completed (see flushPendingMessages())
+        pending = true;
+        completerContext->addPendingMessage(msg);
+    }
+
+    return boost::intrusive_ptr<SessionState::IncompleteIngressMsgXfer>(new SessionState::IncompleteIngressMsgXfer(*this));
 }
 
 
@@ -448,17 +466,18 @@ SessionState::IncompleteIngressMsgXfer::clone()
  */
 void SessionState::IncompleteIngressMsgXfer::completed(bool sync)
 {
+    if (pending) completerContext->deletePendingMessage(id);
     if (!sync) {
         /** note well: this path may execute in any thread.  It is safe to access
          * the scheduledCompleterContext, since *this has a shared pointer to it.
-         * but not session or msg!
+         * but not session!
          */
-        session = 0; msg = 0;
+        session = 0;
         QPID_LOG(debug, ": async completion callback scheduled for msg seq=" << id);
         completerContext->scheduleMsgCompletion(id, requiresAccept, requiresSync);
     } else {
         // this path runs directly from the ac->end() call in handleContent() above,
-        // so *session and *msg are definately valid.
+        // so *session is definately valid.
         if (session->isAttached()) {
             QPID_LOG(debug, ": receive completed for msg seq=" << id);
             session->completeRcvMsg(id, requiresAccept, requiresSync);
@@ -477,6 +496,42 @@ void SessionState::AsyncCommandCompleter::schedule(boost::intrusive_ptr<AsyncCom
 }
 
 
+/** Track an ingress message that is pending completion */
+void SessionState::AsyncCommandCompleter::addPendingMessage(boost::intrusive_ptr<Message> msg)
+{
+    qpid::sys::ScopedLock<qpid::sys::Mutex> l(completerLock);
+    std::pair<SequenceNumber, boost::intrusive_ptr<Message> > item(msg->getCommandId(), msg);
+    bool unique = pendingMsgs.insert(item).second;
+    if (!unique) {
+      assert(false);
+    }
+}
+
+
+/** pending message has completed */
+void SessionState::AsyncCommandCompleter::deletePendingMessage(SequenceNumber id)
+{
+    qpid::sys::ScopedLock<qpid::sys::Mutex> l(completerLock);
+    pendingMsgs.erase(id);
+}
+
+
+/** done when an execution.sync arrives */
+void SessionState::AsyncCommandCompleter::flushPendingMessages()
+{
+    std::map<SequenceNumber, boost::intrusive_ptr<Message> > copy;
+    {
+        qpid::sys::ScopedLock<qpid::sys::Mutex> l(completerLock);
+        pendingMsgs.swap(copy);    // we've only tracked these in case a flush is needed, so nuke 'em now.
+    }
+    // drop lock, so it is safe to call "flush()"
+    for (std::map<SequenceNumber, boost::intrusive_ptr<Message> >::iterator i = copy.begin();
+         i != copy.end(); ++i) {
+        i->second->flush();
+    }
+}
+
+
 /** mark an ingress Message.Transfer command as completed.
  * This method must be thread safe - it may run on any thread.
  */
@@ -486,7 +541,7 @@ void SessionState::AsyncCommandCompleter::scheduleMsgCompletion(SequenceNumber c
 {
     qpid::sys::ScopedLock<qpid::sys::Mutex> l(completerLock);
 
-    if (session) {
+    if (session && isAttached) {
         MessageInfo msg(cmd, requiresAccept, requiresSync);
         completedMsgs.push_back(msg);
         if (completedMsgs.size() == 1) {
@@ -520,6 +575,24 @@ void SessionState::AsyncCommandCompleter::cancel()
 {
     qpid::sys::ScopedLock<qpid::sys::Mutex> l(completerLock);
     session = 0;
+}
+
+
+/** inform the completer that the session has attached,
+ * allows command completion scheduling from any thread */
+void SessionState::AsyncCommandCompleter::attached()
+{
+    qpid::sys::ScopedLock<qpid::sys::Mutex> l(completerLock);
+    isAttached = true;
+}
+
+
+/** inform the completer that the session has detached,
+ * disables command completion scheduling from any thread */
+void SessionState::AsyncCommandCompleter::detached()
+{
+    qpid::sys::ScopedLock<qpid::sys::Mutex> l(completerLock);
+    isAttached = false;
 }
 
 }} // namespace qpid::broker

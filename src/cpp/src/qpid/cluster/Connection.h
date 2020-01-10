@@ -24,10 +24,10 @@
 
 #include "types.h"
 #include "OutputInterceptor.h"
-#include "EventFrame.h"
 #include "McastFrameHandler.h"
 #include "UpdateReceiver.h"
 
+#include "qpid/RefCounted.h"
 #include "qpid/broker/Connection.h"
 #include "qpid/broker/SecureConnection.h"
 #include "qpid/broker/SemanticState.h"
@@ -47,7 +47,7 @@ namespace framing { class AMQFrame; }
 
 namespace broker {
 class SemanticState;
-class QueuedMessage;
+struct QueuedMessage;
 class TxBuffer;
 class TxAccept;
 }
@@ -55,6 +55,7 @@ class TxAccept;
 namespace cluster {
 class Cluster;
 class Event;
+struct EventFrame;
 
 /** Intercept broker::Connection calls for shadow and local cluster connections. */
 class Connection :
@@ -153,7 +154,7 @@ class Connection :
 
     void queuePosition(const std::string&, const framing::SequenceNumber&);
     void queueFairshareState(const std::string&, const uint8_t priority, const uint8_t count);
-    void expiryId(uint64_t);
+    void queueObserverState(const std::string&, const std::string&, const framing::FieldTable&);
 
     void txStart();
     void txAccept(const framing::SequenceSet&);
@@ -189,6 +190,10 @@ class Connection :
     void setSecureConnection ( broker::SecureConnection * sc );
 
     void doCatchupIoCallbacks();
+
+    void clock(uint64_t time);
+
+    void queueDequeueSincePurgeState(const std::string&, uint32_t);
 
   private:
     struct NullFrameHandler : public framing::FrameHandler {
@@ -250,6 +255,7 @@ class Connection :
     Cluster& cluster;
     ConnectionId self;
     bool catchUp;
+    bool announced;
     OutputInterceptor output;
     framing::FrameDecoder localDecoder;
     ConnectionCtor connectionCtor;
