@@ -34,7 +34,7 @@ import org.apache.qpid.transport.codec.BBDecoder;
 import java.nio.ByteBuffer;
 import java.lang.ref.SoftReference;
 
-public class MessageMetaData_0_10 implements StorableMessageMetaData
+public class MessageMetaData_0_10 implements StorableMessageMetaData, InboundMessage
 {
     private Header _header;
     private DeliveryProperties _deliveryProps;
@@ -44,7 +44,7 @@ public class MessageMetaData_0_10 implements StorableMessageMetaData
     private int _bodySize;
     private volatile SoftReference<ByteBuffer> _body;
 
-    private static final int ENCODER_SIZE = 1 << 16;
+    private static final int ENCODER_SIZE = 1 << 10;
 
     public static final MessageMetaDataType.Factory<MessageMetaData_0_10> FACTORY = new MetaDataFactory();
 
@@ -194,6 +194,12 @@ public class MessageMetaData_0_10 implements StorableMessageMetaData
         return _deliveryProps == null ? 0L : _deliveryProps.getExpiration();
     }
 
+    public boolean isRedelivered()
+    {
+        // The *Message* is never redelivered, only queue entries are...
+        return false;
+    }
+
     public long getArrivalTime()
     {
         return _arrivalTime;
@@ -239,4 +245,6 @@ public class MessageMetaData_0_10 implements StorableMessageMetaData
 
         }
     }
+
+
 }

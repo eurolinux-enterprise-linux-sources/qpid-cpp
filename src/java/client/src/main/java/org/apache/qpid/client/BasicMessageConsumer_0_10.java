@@ -23,9 +23,7 @@ import org.apache.qpid.client.AMQDestination.AddressOption;
 import org.apache.qpid.client.AMQDestination.DestSyntax;
 import org.apache.qpid.client.failover.FailoverException;
 import org.apache.qpid.client.message.*;
-import org.apache.qpid.client.messaging.address.Node.QueueNode;
 import org.apache.qpid.client.protocol.AMQProtocolHandler;
-import org.apache.qpid.framing.AMQShortString;
 import org.apache.qpid.framing.FieldTable;
 import org.apache.qpid.AMQException;
 import org.apache.qpid.AMQInternalException;
@@ -33,6 +31,7 @@ import org.apache.qpid.protocol.AMQConstant;
 import org.apache.qpid.transport.*;
 import org.apache.qpid.filter.MessageFilter;
 import org.apache.qpid.filter.JMSSelectorFilter;
+import org.apache.qpid.jms.Session;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -68,19 +67,13 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
     private boolean _preAcquire = true;
 
     /**
-     * Indicate whether this consumer is started.
-     */
-    private boolean _isStarted = false;
-
-    /**
      * Specify whether this consumer is performing a sync receive
      */
     private final AtomicBoolean _syncReceive = new AtomicBoolean(false);
     private String _consumerTagString;
     
     private long capacity = 0;
-        
-    //--- constructor
+
     protected BasicMessageConsumer_0_10(int channelId, AMQConnection connection, AMQDestination destination,
                                         String messageSelector, boolean noLocal, MessageFactoryRegistry messageFactory,
                                         AMQSession session, AMQProtocolHandler protocolHandler,
@@ -106,7 +99,6 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
                 _preAcquire = false;
             }
         }
-        _isStarted = connection.started();
         
         // Destination setting overrides connection defaults
         if (destination.getDestSyntax() == DestSyntax.ADDR && 
@@ -159,12 +151,19 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
             {
                 if (isMessageListenerSet() && capacity == 0)
                 {
-                    _0_10session.getQpidSession().messageFlow(getConsumerTagString(),
-                                                              MessageCreditUnit.MESSAGE, 1,
-                                                              Option.UNRELIABLE);
+                    messageFlow();
                 }
                 _logger.debug("messageOk, trying to notify");
                 super.notifyMessage(jmsMessage);
+            }
+            else
+            {
+                // if we are synchronously waiting for a message
+                // and messages are not pre-fetched we then need to request another one
+                if(capacity == 0)
+                {
+                   messageFlow();
+                }
             }
         }
         catch (AMQException e)
@@ -173,8 +172,6 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
             getSession().getAMQConnection().exceptionReceived(e);
         }
     }
-
-    //----- overwritten methods
 
     /**
      * This method is invoked when this consumer is stopped.
@@ -205,11 +202,18 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
         super.notifyMessage(messageFrame);
     }
 
-    @Override protected void preApplicationProcessing(AbstractJMSMessage jmsMsg) throws JMSException
+    @Override
+    protected void preDeliver(AbstractJMSMessage jmsMsg)
     {
-        super.preApplicationProcessing(jmsMsg);
-        if (!_session.getTransacted() && _session.getAcknowledgeMode() != org.apache.qpid.jms.Session.CLIENT_ACKNOWLEDGE)
+        super.preDeliver(jmsMsg);
+
+        if (_acknowledgeMode == org.apache.qpid.jms.Session.NO_ACKNOWLEDGE)
         {
+            //For 0-10 we need to ensure that all messages are indicated processed in some way to
+            //ensure their AMQP command-id is marked completed, and so we must send a completion
+            //even for no-ack messages even though there isnt actually an 'acknowledgement' occurring.
+            //Add message to the unacked message list to ensure we dont lose record of it before
+            //sending a completion of some sort.
             _session.addUnacknowledgedMessage(jmsMsg.getDeliveryTag());
         }
     }
@@ -221,7 +225,6 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
         return _messageFactory.createMessage(msg.getMessageTransfer());
     }
 
-    // private methods
     /**
      * Check whether a message can be delivered to this consumer.
      *
@@ -250,6 +253,7 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
             _logger.debug("messageOk " + messageOk);
             _logger.debug("_preAcquire " + _preAcquire);
         }
+
         if (!messageOk)
         {
             if (_preAcquire)
@@ -266,19 +270,12 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
             {
                 if (_logger.isDebugEnabled())
                 {
-                    _logger.debug("Message not OK, releasing");
+                    _logger.debug("filterMessage - not ack'ing message as not acquired");
                 }
-                releaseMessage(message);
-            }
-            // if we are syncrhonously waiting for a message
-            // and messages are not prefetched we then need to request another one
-            if(capacity == 0)
-            {
-               _0_10session.getQpidSession().messageFlow(getConsumerTagString(),
-                                                         MessageCreditUnit.MESSAGE, 1,
-                                                         Option.UNRELIABLE);
+                flushUnwantedMessage(message);
             }
         }
+
         // now we need to acquire this message if needed
         // this is the case of queue with a message selector set
         if (!_preAcquire && messageOk && !isNoConsume())
@@ -290,6 +287,7 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
             messageOk = acquireMessage(message);
             _logger.debug("filterMessage - message acquire status : " + messageOk);
         }
+
         return messageOk;
     }
 
@@ -300,38 +298,38 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
      * @param message The message to be acknowledged
      * @throws AMQException If the message cannot be acquired due to some internal error.
      */
-    private void acknowledgeMessage(AbstractJMSMessage message) throws AMQException
+    private void acknowledgeMessage(final AbstractJMSMessage message) throws AMQException
     {
-        if (!_preAcquire)
-        {
-            RangeSet ranges = new RangeSet();
-            ranges.add((int) message.getDeliveryTag());
-            _0_10session.messageAcknowledge
-                (ranges,
-                 _acknowledgeMode != org.apache.qpid.jms.Session.NO_ACKNOWLEDGE);
+        final RangeSet ranges = new RangeSet();
+        ranges.add((int) message.getDeliveryTag());
+        _0_10session.messageAcknowledge
+            (ranges,
+             _acknowledgeMode != org.apache.qpid.jms.Session.NO_ACKNOWLEDGE);
 
-            AMQException amqe = _0_10session.getCurrentException();
-            if (amqe != null)
-            {
-                throw amqe;
-            }
+        final AMQException amqe = _0_10session.getCurrentException();
+        if (amqe != null)
+        {
+            throw amqe;
         }
     }
 
     /**
-     * Release a message
+     * Flush an unwanted message. For 0-10 we need to ensure that all messages are indicated
+     * processed to ensure their AMQP command-id is marked completed.
      *
-     * @param message The message to be released
-     * @throws AMQException If the message cannot be released due to some internal error.
+     * @param message The unwanted message to be flushed
+     * @throws AMQException If the unwanted message cannot be flushed due to some internal error.
      */
-    private void releaseMessage(AbstractJMSMessage message) throws AMQException
+    private void flushUnwantedMessage(final AbstractJMSMessage message) throws AMQException
     {
-        if (_preAcquire)
+        final RangeSet ranges = new RangeSet();
+        ranges.add((int) message.getDeliveryTag());
+        _0_10session.flushProcessed(ranges,false);
+
+        final AMQException amqe = _0_10session.getCurrentException();
+        if (amqe != null)
         {
-            RangeSet ranges = new RangeSet();
-            ranges.add((int) message.getDeliveryTag());
-            _0_10session.getQpidSession().messageRelease(ranges);
-            _0_10session.sync();
+            throw amqe;
         }
     }
 
@@ -342,44 +340,52 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
      * @return true if the message has been acquired, false otherwise.
      * @throws AMQException If the message cannot be acquired due to some internal error.
      */
-    private boolean acquireMessage(AbstractJMSMessage message) throws AMQException
+    private boolean acquireMessage(final AbstractJMSMessage message) throws AMQException
     {
         boolean result = false;
-        if (!_preAcquire)
+        final RangeSet ranges = new RangeSet();
+        ranges.add((int) message.getDeliveryTag());
+
+        final Acquired acq = _0_10session.getQpidSession().messageAcquire(ranges).get();
+
+        final RangeSet acquired = acq.getTransfers();
+        if (acquired != null && acquired.size() > 0)
         {
-            RangeSet ranges = new RangeSet();
-            ranges.add((int) message.getDeliveryTag());
-
-            Acquired acq = _0_10session.getQpidSession().messageAcquire(ranges).get();
-
-            RangeSet acquired = acq.getTransfers();
-            if (acquired != null && acquired.size() > 0)
-            {
-                result = true;
-            }
+            result = true;
         }
         return result;
     }
 
+    private void messageFlow()
+    {
+        _0_10session.getQpidSession().messageFlow(getConsumerTagString(),
+                                                  MessageCreditUnit.MESSAGE, 1,
+                                                  Option.UNRELIABLE);
+    }
 
     public void setMessageListener(final MessageListener messageListener) throws JMSException
     {
         super.setMessageListener(messageListener);
-        if (messageListener != null && capacity == 0)
+        try
         {
-            _0_10session.getQpidSession().messageFlow(getConsumerTagString(),
-                                                      MessageCreditUnit.MESSAGE, 1,
-                                                      Option.UNRELIABLE);
-        }
-        if (messageListener != null && !_synchronousQueue.isEmpty())
-        {
-            Iterator messages=_synchronousQueue.iterator();
-            while (messages.hasNext())
+            if (messageListener != null && capacity == 0)
             {
-                AbstractJMSMessage message=(AbstractJMSMessage) messages.next();
-                messages.remove();
-                _session.rejectMessage(message, true);
+                messageFlow();
             }
+            if (messageListener != null && !_synchronousQueue.isEmpty())
+            {
+                Iterator messages=_synchronousQueue.iterator();
+                while (messages.hasNext())
+                {
+                    AbstractJMSMessage message=(AbstractJMSMessage) messages.next();
+                    messages.remove();
+                    _session.rejectMessage(message, true);
+                }
+            }
+        }
+        catch(TransportException e)
+        {
+            throw _session.toJMSException("Exception while setting message listener:"+ e.getMessage(), e);
         }
     }
 
@@ -387,9 +393,7 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
     {
         if (_0_10session.isStarted() && _syncReceive.get())
         {
-            _0_10session.getQpidSession().messageFlow
-                (getConsumerTagString(), MessageCreditUnit.MESSAGE, 1,
-                 Option.UNRELIABLE);
+            messageFlow();
         }
     }
 
@@ -410,9 +414,7 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
         }
         if (_0_10session.isStarted() && capacity == 0 && _synchronousQueue.isEmpty())
         {
-            _0_10session.getQpidSession().messageFlow(getConsumerTagString(),
-                                                      MessageCreditUnit.MESSAGE, 1,
-                                                      Option.UNRELIABLE);
+            messageFlow();
         }
         Object o = super.getMessageFromQueue(l);
         if (o == null && _0_10session.isStarted())
@@ -443,21 +445,29 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
         return o;
     }
 
-    void postDeliver(AbstractJMSMessage msg) throws JMSException
+    void postDeliver(AbstractJMSMessage msg)
     {
         super.postDeliver(msg);
-        if (_acknowledgeMode == org.apache.qpid.jms.Session.NO_ACKNOWLEDGE && !_session.isInRecovery())
+
+        switch (_acknowledgeMode)
         {
-          _session.acknowledgeMessage(msg.getDeliveryTag(), false);
+            case Session.SESSION_TRANSACTED:
+                _0_10session.sendTxCompletionsIfNecessary();
+                break;
+            case Session.NO_ACKNOWLEDGE:
+                if (!_session.isInRecovery())
+                {
+                  _session.acknowledgeMessage(msg.getDeliveryTag(), false);
+                }
+                break;
+            case Session.AUTO_ACKNOWLEDGE:
+                if (!_session.isInRecovery() && _session.getAMQConnection().getSyncAck())
+                {
+                    ((AMQSession_0_10) getSession()).getQpidSession().sync();
+                }
+                break;
         }
         
-        if (_acknowledgeMode == org.apache.qpid.jms.Session.AUTO_ACKNOWLEDGE  &&
-             !_session.isInRecovery() &&   
-             _session.getAMQConnection().getSyncAck())
-        {
-            ((AMQSession_0_10) getSession()).flushAcknowledgments();
-            ((AMQSession_0_10) getSession()).getQpidSession().sync();
-        }
     }
 
     Message receiveBrowse() throws JMSException
@@ -488,6 +498,7 @@ public class BasicMessageConsumer_0_10 extends BasicMessageConsumer<UnprocessedM
                 }
             }
 
+            _0_10session.flushProcessed(ranges, false);
             _0_10session.getQpidSession().messageRelease(ranges, Option.SET_REDELIVERED);
             clearReceiveQueue();
         }

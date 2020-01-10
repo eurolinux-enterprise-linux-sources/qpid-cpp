@@ -29,6 +29,7 @@ import javax.security.sasl.SaslServer;
 
 import junit.framework.TestCase;
 
+import org.apache.qpid.server.configuration.plugins.ConfigurationPlugin;
 import org.apache.qpid.server.security.auth.AuthenticationResult;
 import org.apache.qpid.server.security.auth.AuthenticationResult.AuthenticationStatus;
 import org.apache.qpid.server.security.auth.manager.AuthenticationManager;
@@ -210,31 +211,36 @@ public class RMIPasswordAuthenticatorTest extends TestCase
     {
         return new AuthenticationManager()
         {
-            @Override
+            public void configure(ConfigurationPlugin config)
+            {
+                throw new UnsupportedOperationException();
+            }
+
+            public void initialise()
+            {
+                throw new UnsupportedOperationException();
+            }
+
             public void close()
             {
                 throw new UnsupportedOperationException();
             }
 
-            @Override
             public String getMechanisms()
             {
                 throw new UnsupportedOperationException();
             }
 
-            @Override
             public SaslServer createSaslServer(String mechanism, String localFQDN) throws SaslException
             {
                 throw new UnsupportedOperationException();
             }
 
-            @Override
             public AuthenticationResult authenticate(SaslServer server, byte[] response)
             {
                 throw new UnsupportedOperationException();
             }
 
-            @Override
             public AuthenticationResult authenticate(String username, String password)
             {
                 if (exception != null) {
@@ -251,5 +257,4 @@ public class RMIPasswordAuthenticatorTest extends TestCase
             }
         };
     }
-
 }

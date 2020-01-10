@@ -51,7 +51,7 @@ public class QueueEntryImpl implements QueueEntry
 
     private MessageReference _message;
 
-    private Set<Subscription> _rejectedBy = null;
+    private Set<Long> _rejectedBy = null;
 
     private volatile EntryState _state = AVAILABLE_STATE;
 
@@ -233,8 +233,13 @@ public class QueueEntryImpl implements QueueEntry
             if(state instanceof SubscriptionAcquiredState)
             {
                 getQueue().decrementUnackedMsgCount();
+                Subscription subscription = ((SubscriptionAcquiredState)state).getSubscription();
+                if (subscription != null)
+                {
+                    subscription.releaseQueueEntry(this);
+                }
             }
-            
+
             if(!getQueue().isDeleted())
             {
                 getQueue().requeue(this);
@@ -325,19 +330,16 @@ public class QueueEntryImpl implements QueueEntry
 
     public void reject()
     {
-        reject(getDeliveredSubscription());
-    }
+        Subscription subscription = getDeliveredSubscription();
 
-    public void reject(Subscription subscription)
-    {
         if (subscription != null)
         {
             if (_rejectedBy == null)
             {
-                _rejectedBy = new HashSet<Subscription>();
+                _rejectedBy = new HashSet<Long>();
             }
 
-            _rejectedBy.add(subscription);
+            _rejectedBy.add(subscription.getSubscriptionID());
         }
         else
         {
@@ -345,12 +347,12 @@ public class QueueEntryImpl implements QueueEntry
         }
     }
 
-    public boolean isRejectedBy(Subscription subscription)
+    public boolean isRejectedBy(long subscriptionId)
     {
 
         if (_rejectedBy != null) // We have subscriptions that rejected this message
         {
-            return _rejectedBy.contains(subscription);
+            return _rejectedBy.contains(subscriptionId);
         }
         else // This messasge hasn't been rejected yet.
         {
@@ -547,13 +549,11 @@ public class QueueEntryImpl implements QueueEntry
         return _queueEntryList;
     }
 
-    @Override
     public boolean isDequeued()
     {
         return _state == DEQUEUED_STATE;
     }
 
-    @Override
     public boolean isDispensed()
     {
         return _state.isDispensed();

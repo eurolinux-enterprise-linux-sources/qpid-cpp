@@ -65,7 +65,7 @@ if "%AMQJ_LOGGING_LEVEL%" == "" set AMQJ_LOGGING_LEVEL=info
 
 REM Set the default system properties that we'll use now that they have
 REM all been initialised
-set SYSTEM_PROPS=-Damqj.logging.level=%AMQJ_LOGGING_LEVEL% "-DQPID_HOME=%QPID_HOME%" "-DQPID_WORK=%QPID_WORK%"
+set SYSTEM_PROPS=-Damqj.logging.level=%AMQJ_LOGGING_LEVEL% -DQPID_HOME="%QPID_HOME%" -DQPID_WORK="%QPID_WORK%"
 
 if "%EXTERNAL_CLASSPATH%" == "" set EXTERNAL_CLASSPATH=%CLASSPATH%
 
@@ -77,7 +77,7 @@ goto afterQpidClasspath
 
 :noQpidClasspath
 echo Warning: Qpid classpath not set. CLASSPATH set to %QPID_HOME%\lib\qpid-all.jar
-set CLASSPATH=%QPID_HOME%\lib\qpid-all.jar
+set CLASSPATH=%QPID_HOME%\lib\qpid-all.jar;%QPID_HOME%\lib\opt\*
 :afterQpidClasspath
 
 REM start parsing -run arguments
@@ -108,13 +108,13 @@ goto beforeRunShift
 
 :runJdpa
 REM USAGE: adds debugging options to the java command, use
-REM USAGE: JDPA_TRANSPORT and JPDA_ADDRESS to customize the debugging
+REM USAGE: JPDA_TRANSPORT and JPDA_ADDRESS to customize the debugging
 REM USAGE: behavior and use JPDA_OPTS to override it entirely
-if "%JPDA_OPTS%" == "" goto beforeRunShift
-if "%JPDA_TRANSPORT%" == "" set JPDA_TRANSPORT=-dt_socket
+if not "%JPDA_OPTS%" == "" goto beforeRunShift
+if "%JPDA_TRANSPORT%" == "" set JPDA_TRANSPORT=dt_socket
 if "%JPDA_ADDRESS%" == "" set JPDA_ADDRESS=8000
-set JPDA_OPTS="-Xdebug -Xrunjdwp:transport=%JPDA_TRANSPORT%,address=%JPDA_ADDRESS%,server=y,suspend=n"
-set QPID_OPTS="%QPID_OPTS% %JPDA_OPTS%"
+set JPDA_OPTS=-Xdebug -Xrunjdwp:transport=%JPDA_TRANSPORT%,address=%JPDA_ADDRESS%,server=y,suspend=n
+REM set QPID_OPTS="%QPID_OPTS% %JPDA_OPTS%"
 goto beforeRunShift
 
 :runExternalClasspath
@@ -192,7 +192,7 @@ rem QPID_OPTS intended to hold any -D props for use
 rem user must enclose any value for QPID_OPTS in double quotes
 :runCommand
 set MODULE_JARS=%QPID_MODULE_JARS%
-set COMMAND="%JAVA_HOME%\bin\java" %JAVA_VM% %JAVA_MEM% %JAVA_GC% %QPID_OPTS% %SYSTEM_PROPS% -cp "%CLASSPATH%;%MODULE_JARS%" org.apache.qpid.server.Main %QPID_ARGS%
+set COMMAND="%JAVA_HOME%\bin\java" %JAVA_VM% %JAVA_MEM% %JAVA_GC% %QPID_OPTS% %JPDA_OPTS% %SYSTEM_PROPS% -cp "%CLASSPATH%;%MODULE_JARS%" org.apache.qpid.server.Main %QPID_ARGS%
 
 if "%debug%" == "true" echo %CLASSPATH%;%LAUNCH_JAR%;%MODULE_JARS%
 if "%debug%" == "true" echo %COMMAND%

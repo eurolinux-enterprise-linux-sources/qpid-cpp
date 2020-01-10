@@ -72,6 +72,7 @@ import org.apache.qpid.transport.RangeSet;
 import org.apache.qpid.transport.Session;
 import org.apache.qpid.transport.SessionException;
 import org.apache.qpid.transport.SessionListener;
+import org.apache.qpid.transport.TransportException;
 import org.apache.qpid.util.Serial;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,9 +140,9 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
     private int unackedCount = 0;    
 
     /**
-     * USed to store the range of in tx messages
+     * Used to store the range of in tx messages
      */
-    private RangeSet _txRangeSet = new RangeSet();
+    private final RangeSet _txRangeSet = new RangeSet();
     private int _txSize = 0;    
     //--- constructors
 
@@ -159,13 +160,20 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
      */
     AMQSession_0_10(org.apache.qpid.transport.Connection qpidConnection, AMQConnection con, int channelId,
                     boolean transacted, int acknowledgeMode, MessageFactoryRegistry messageFactoryRegistry,
-                    int defaultPrefetchHighMark, int defaultPrefetchLowMark)
+                    int defaultPrefetchHighMark, int defaultPrefetchLowMark,String name)
     {
 
         super(con, channelId, transacted, acknowledgeMode, messageFactoryRegistry, defaultPrefetchHighMark,
               defaultPrefetchLowMark);
         _qpidConnection = qpidConnection;
-        _qpidSession = _qpidConnection.createSession(1);
+        if (name == null)
+        {
+            _qpidSession = _qpidConnection.createSession(1);
+        }
+        else
+        {
+            _qpidSession = _qpidConnection.createSession(name,1);
+        }
         _qpidSession.setSessionListener(this);
         if (_transacted)
         {
@@ -192,11 +200,12 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
      * @param qpidConnection      The connection
      */
     AMQSession_0_10(org.apache.qpid.transport.Connection qpidConnection, AMQConnection con, int channelId,
-                    boolean transacted, int acknowledgeMode, int defaultPrefetchHigh, int defaultPrefetchLow)
+                    boolean transacted, int acknowledgeMode, int defaultPrefetchHigh, int defaultPrefetchLow,
+                    String name)
     {
 
         this(qpidConnection, con, channelId, transacted, acknowledgeMode, MessageFactoryRegistry.newDefaultRegistry(),
-             defaultPrefetchHigh, defaultPrefetchLow);
+             defaultPrefetchHigh, defaultPrefetchLow,name);
     }
 
     private void addUnacked(int id)
@@ -261,7 +270,7 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
 
         long prefetch = getAMQConnection().getMaxPrefetch();
 
-        if (unackedCount >= prefetch/2 || maxAckDelay <= 0)
+        if (unackedCount >= prefetch/2 || maxAckDelay <= 0 || _acknowledgeMode == javax.jms.Session.AUTO_ACKNOWLEDGE)
         {
             flushAcknowledgments();
         }
@@ -285,23 +294,34 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
         }
     }
 
-    void messageAcknowledge(RangeSet ranges, boolean accept)
+    void messageAcknowledge(final RangeSet ranges, final boolean accept)
     {
         messageAcknowledge(ranges,accept,false);
     }
     
-    void messageAcknowledge(RangeSet ranges, boolean accept,boolean setSyncBit)
+    void messageAcknowledge(final RangeSet ranges, final boolean accept, final boolean setSyncBit)
     {
-        Session ssn = getQpidSession();
-        for (Range range : ranges)
+        final Session ssn = getQpidSession();
+        flushProcessed(ranges,accept);
+        if (accept)
+        {
+            ssn.messageAccept(ranges, UNRELIABLE, setSyncBit ? SYNC : NONE);
+        }
+    }
+
+    /**
+     * Flush any outstanding commands. This causes session complete to be sent.
+     * @param ranges the range of command ids.
+     * @param batch true if batched.
+     */
+    void flushProcessed(final RangeSet ranges, final boolean batch)
+    {
+        final Session ssn = getQpidSession();
+        for (final Range range : ranges)
         {
             ssn.processed(range);
         }
-        ssn.flushProcessed(accept ? BATCH : NONE);
-        if (accept)
-        {
-            ssn.messageAccept(ranges, UNRELIABLE,setSyncBit? SYNC : NONE);
-        }
+        ssn.flushProcessed(batch ? BATCH : NONE);
     }
 
     /**
@@ -403,25 +423,6 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
         }
     }
 
-
-    /**
-     * Commit the receipt and the delivery of all messages exchanged by this session resources.
-     */
-    public void sendCommit() throws AMQException, FailoverException
-    {
-        getQpidSession().setAutoSync(true);
-        try
-        {
-            getQpidSession().txCommit();
-        }
-        finally
-        {
-            getQpidSession().setAutoSync(false);
-        }
-        // We need to sync so that we get notify of an error.
-        sync();
-    }
-
     /**
      * Create a queue with a given name.
      *
@@ -454,6 +455,15 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
     public void sendRecover() throws AMQException, FailoverException
     {
         // release all unacked messages
+        RangeSet ranges = gatherUnackedRangeSet();
+        flushProcessed(ranges, false);
+        getQpidSession().messageRelease(ranges, Option.SET_REDELIVERED);
+        // We need to sync so that we get notify of an error.
+        sync();
+    }
+
+    private RangeSet gatherUnackedRangeSet()
+    {
         RangeSet ranges = new RangeSet();
         while (true)
         {
@@ -462,19 +472,22 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
             {
                 break;
             }
-            ranges.add((int) (long) tag);
-        }
-        getQpidSession().messageRelease(ranges, Option.SET_REDELIVERED);
-        // We need to sync so that we get notify of an error.
-        sync();
-    }
 
+            ranges.add(tag.intValue());
+        }
+
+        return ranges;
+    }
 
     public void releaseForRollback()
     {
-        getQpidSession().messageRelease(_txRangeSet, Option.SET_REDELIVERED);
-        _txRangeSet.clear();
-        _txSize = 0;
+        if (_txSize > 0)
+        {
+            flushProcessed(_txRangeSet, false);
+            getQpidSession().messageRelease(_txRangeSet, Option.SET_REDELIVERED);
+            _txRangeSet.clear();
+            _txSize = 0;
+        }
     }
 
     /**
@@ -488,6 +501,7 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
         // The value of requeue is always true
         RangeSet ranges = new RangeSet();
         ranges.add((int) deliveryTag);
+        flushProcessed(ranges, false);
         getQpidSession().messageRelease(ranges, Option.SET_REDELIVERED);
         //I don't think we need to sync
     }
@@ -540,7 +554,6 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
     }
     
     public boolean isQueueBound(final String exchangeName, final String queueName, final String bindingKey,Map<String,Object> args)
-    throws JMSException
     {
         boolean res;
         ExchangeBoundResult bindingQueryResult =
@@ -668,13 +681,12 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
      * Create an 0_10 message producer
      */
     public BasicMessageProducer_0_10 createMessageProducer(final Destination destination, final boolean mandatory,
-                                                      final boolean immediate, final boolean waitUntilSent,
-                                                      long producerId) throws JMSException
+                                                      final boolean immediate, final long producerId) throws JMSException
     {
         try
         {
             return new BasicMessageProducer_0_10(_connection, (AMQDestination) destination, _transacted, _channelId, this,
-                                             getProtocolHandler(), producerId, immediate, mandatory, waitUntilSent);
+                                             getProtocolHandler(), producerId, immediate, mandatory);
         }
         catch (AMQException e)
         {
@@ -683,6 +695,10 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
             ex.setLinkedException(e);
             
             throw ex;
+        }
+        catch(TransportException e)
+        {
+            throw toJMSException("Exception while creating message producer:" + e.getMessage(), e);
         }
 
     }
@@ -969,44 +985,49 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
 
     /**
      * Store non committed messages for this session
-     * With 0.10 messages are consumed with window mode, we must send a completion
-     * before the window size is reached so credits don't dry up.
      * @param id
      */
     @Override protected void addDeliveredMessage(long id)
     {
         _txRangeSet.add((int) id);
         _txSize++;
+    }
+
+    /**
+     * With 0.10 messages are consumed with window mode, we must send a completion
+     * before the window size is reached so credits don't dry up.
+     */
+    protected void sendTxCompletionsIfNecessary()
+    {
         // this is a heuristic, we may want to have that configurable
-        if (_connection.getMaxPrefetch() == 1 ||
-                _connection.getMaxPrefetch() != 0 && _txSize % (_connection.getMaxPrefetch() / 2) == 0)
+        if (_txSize > 0 && (_connection.getMaxPrefetch() == 1 ||
+                _connection.getMaxPrefetch() != 0 && _txSize % (_connection.getMaxPrefetch() / 2) == 0))
         {
             // send completed so consumer credits don't dry up
             messageAcknowledge(_txRangeSet, false);
         }
     }
 
-    @Override public void commit() throws JMSException
+    public void commitImpl() throws AMQException, FailoverException, TransportException
     {
-        checkTransacted();
+        if( _txSize > 0 )
+        {
+            messageAcknowledge(_txRangeSet, true);
+            _txRangeSet.clear();
+            _txSize = 0;
+        }
+
+        getQpidSession().setAutoSync(true);
         try
         {
-            if( _txSize > 0 )
-            {
-                messageAcknowledge(_txRangeSet, true);
-                _txRangeSet.clear();
-                _txSize = 0;
-            }
-            sendCommit();
+            getQpidSession().txCommit();
         }
-        catch (AMQException e)
+        finally
         {
-            throw new JMSAMQException("Failed to commit: " + e.getMessage(), e);
+            getQpidSession().setAutoSync(false);
         }
-        catch (FailoverException e)
-        {
-            throw new JMSAMQException("Fail-over interrupted commit. Status of the commit is uncertain.", e);
-        }
+        // We need to sync so that we get notify of an error.
+        sync();
     }
 
     protected final boolean tagLE(long tag1, long tag2)
@@ -1169,8 +1190,8 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
                                               boolean isConsumer,
                                               boolean noWait) throws AMQException
     {
-        if (dest.isAddressResolved())
-        {           
+        if (dest.isAddressResolved() && dest.isResolvedAfter(_connection.getLastFailoverTime()))
+        {
             if (isConsumer && AMQDestination.TOPIC_TYPE == dest.getAddressType()) 
             {
                 createSubscriptionQueue(dest);
@@ -1259,7 +1280,7 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
                             "The name '" + dest.getAddressName() +
                             "' supplied in the address doesn't resolve to an exchange or a queue");
             }
-            dest.setAddressResolved(true);
+            dest.setAddressResolved(System.currentTimeMillis());
         }
     }
     
@@ -1368,5 +1389,31 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
         sb.append(">");
         return sb.toString();
     }
-    
+
+    protected void acknowledgeImpl()
+    {
+        RangeSet range = gatherUnackedRangeSet();
+
+        if(range.size() > 0 )
+        {
+            messageAcknowledge(range, true);
+            getQpidSession().sync();
+        }
+    }
+
+    @Override
+    void resubscribe() throws AMQException
+    {
+        // Also reset the delivery tag tracker, to insure we dont
+        // return the first <total number of msgs received on session>
+        // messages sent by the brokers following the first rollback
+        // after failover
+        _highestDeliveryTag.set(-1);
+        // Clear txRangeSet/unacknowledgedMessageTags so we don't complete commands corresponding to
+        //messages that came from the old broker.
+        _txRangeSet.clear();
+        _txSize = 0;
+        _unacknowledgedMessageTags.clear();
+        super.resubscribe();
+    }
 }

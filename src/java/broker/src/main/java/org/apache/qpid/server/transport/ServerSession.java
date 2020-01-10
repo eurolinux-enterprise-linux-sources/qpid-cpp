@@ -20,8 +20,8 @@
  */
 package org.apache.qpid.server.transport;
 
-import static org.apache.qpid.server.logging.subjects.LogSubjectFormat.*;
-import static org.apache.qpid.util.Serial.*;
+import static org.apache.qpid.server.logging.subjects.LogSubjectFormat.CHANNEL_FORMAT;
+import static org.apache.qpid.util.Serial.gt;
 
 import java.lang.ref.WeakReference;
 import java.security.Principal;
@@ -38,6 +38,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.security.auth.Subject;
+
 import org.apache.qpid.AMQException;
 import org.apache.qpid.protocol.AMQConstant;
 import org.apache.qpid.protocol.ProtocolEngine;
@@ -51,13 +53,14 @@ import org.apache.qpid.server.logging.LogSubject;
 import org.apache.qpid.server.logging.actors.CurrentActor;
 import org.apache.qpid.server.logging.actors.GenericActor;
 import org.apache.qpid.server.logging.messages.ChannelMessages;
+import org.apache.qpid.server.message.MessageReference;
 import org.apache.qpid.server.message.ServerMessage;
 import org.apache.qpid.server.protocol.AMQConnectionModel;
 import org.apache.qpid.server.protocol.AMQSessionModel;
 import org.apache.qpid.server.queue.AMQQueue;
 import org.apache.qpid.server.queue.BaseQueue;
 import org.apache.qpid.server.queue.QueueEntry;
-import org.apache.qpid.server.security.PrincipalHolder;
+import org.apache.qpid.server.security.AuthorizationHolder;
 import org.apache.qpid.server.store.MessageStore;
 import org.apache.qpid.server.subscription.Subscription_0_10;
 import org.apache.qpid.server.txn.AutoCommitTransaction;
@@ -75,9 +78,7 @@ import org.apache.qpid.transport.SessionDelegate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.security.auth.UserPrincipal;
-
-public class ServerSession extends Session implements PrincipalHolder, SessionConfig, AMQSessionModel, LogSubject
+public class ServerSession extends Session implements AuthorizationHolder, SessionConfig, AMQSessionModel, LogSubject
 {
     private static final Logger _logger = LoggerFactory.getLogger(ServerSession.class);
     
@@ -118,8 +119,6 @@ public class ServerSession extends Session implements PrincipalHolder, SessionCo
     private final AtomicLong _txnCount = new AtomicLong(0);
     private final AtomicLong _txnUpdateTime = new AtomicLong(0);
 
-    private Principal _principal;
-
     private Map<String, Subscription_0_10> _subscriptions = new ConcurrentHashMap<String, Subscription_0_10>();
 
     private final List<Task> _taskList = new CopyOnWriteArrayList<Task>();
@@ -131,25 +130,25 @@ public class ServerSession extends Session implements PrincipalHolder, SessionCo
         this(connection, delegate, name, expiry, ((ServerConnection)connection).getConfig());
     }
 
+    public ServerSession(Connection connection, SessionDelegate delegate, Binary name, long expiry, ConnectionConfig connConfig)
+    {
+        super(connection, delegate, name, expiry);
+        _connectionConfig = connConfig;        
+        _transaction = new AutoCommitTransaction(this.getMessageStore());
+
+        _reference = new WeakReference<Session>(this);
+        _id = getConfigStore().createId();
+        getConfigStore().addConfiguredObject(this);
+    }
+
     protected void setState(State state)
     {
         super.setState(state);
 
         if (state == State.OPEN)
         {
-	        _actor.message(ChannelMessages.CREATE());
+            _actor.message(ChannelMessages.CREATE());
         }
-    }
-
-    public ServerSession(Connection connection, SessionDelegate delegate, Binary name, long expiry, ConnectionConfig connConfig)
-    {
-        super(connection, delegate, name, expiry);
-        _connectionConfig = connConfig;        
-        _transaction = new AutoCommitTransaction(this.getMessageStore());
-        _principal = new UserPrincipal(connection.getAuthorizationID());
-        _reference = new WeakReference<Session>(this);
-        _id = getConfigStore().createId();
-        getConfigStore().addConfiguredObject(this);
     }
 
     private ConfigStore getConfigStore()
@@ -174,6 +173,7 @@ public class ServerSession extends Session implements PrincipalHolder, SessionCo
 
                 public void postCommit()
                 {
+                    MessageReference<?> ref = message.newReference();
                     for(int i = 0; i < _queues.length; i++)
                     {
                         try
@@ -186,6 +186,7 @@ public class ServerSession extends Session implements PrincipalHolder, SessionCo
                             throw new RuntimeException(e);
                         }
                     }
+                    ref.release();
                 }
 
                 public void onRollback()
@@ -202,8 +203,8 @@ public class ServerSession extends Session implements PrincipalHolder, SessionCo
     public void sendMessage(MessageTransfer xfr,
                             Runnable postIdSettingAction)
     {
-        invoke(xfr, postIdSettingAction);
         getConnectionModel().registerMessageDelivered(xfr.getBodySize());
+        invoke(xfr, postIdSettingAction);
     }
 
     public void onMessageDispositionChange(MessageTransfer xfr, MessageDispositionChangeListener acceptListener)
@@ -414,19 +415,18 @@ public class ServerSession extends Session implements PrincipalHolder, SessionCo
             {
                 queue.unregisterSubscription(sub);
             }
-
         }
         catch (AMQException e)
         {
             // TODO
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            _logger.error("Failed to unregister subscription :" + e.getMessage(), e);
         }
         finally
         {
             sub.releaseSendLock();
         }
     }
-    
+
     public boolean isTransactional()
     {
         // this does not look great but there should only be one "non-transactional"
@@ -516,9 +516,14 @@ public class ServerSession extends Session implements PrincipalHolder, SessionCo
         return _txnCount.get();
     }
     
-    public Principal getPrincipal()
+    public Principal getAuthorizedPrincipal()
     {
-        return _principal;
+        return ((ServerConnection) getConnection()).getAuthorizedPrincipal();
+    }
+    
+    public Subject getAuthorizedSubject()
+    {
+        return ((ServerConnection) getConnection()).getAuthorizedSubject();
     }
 
     public void addSessionCloseTask(Task task)
@@ -642,7 +647,7 @@ public class ServerSession extends Session implements PrincipalHolder, SessionCo
             // Log a warning on idle or open transactions
             if (idleWarn > 0L && idleTime > idleWarn)
             {
-                CurrentActor.get().message(getLogSubject(), ChannelMessages.IDLE_TXN(openTime));
+                CurrentActor.get().message(getLogSubject(), ChannelMessages.IDLE_TXN(idleTime));
                 _logger.warn("IDLE TRANSACTION ALERT " + getLogSubject().toString() + " " + idleTime + " ms");
             }
             else if (openWarn > 0L && openTime > openWarn)
@@ -663,16 +668,34 @@ public class ServerSession extends Session implements PrincipalHolder, SessionCo
         }
     }
 
-    @Override
     public String toLogString()
     {
        return "[" +
                MessageFormat.format(CHANNEL_FORMAT,
-                                   getConnection().getConnectionId(),
+                                   ((ServerConnection) getConnection()).getConnectionId(),
                                    getClientID(),
                                    ((ProtocolEngine) _connectionConfig).getRemoteAddress().toString(),
                                    getVirtualHost().getName(),
                                    getChannel())
             + "] ";
+    }
+
+    @Override
+    public void close()
+    {
+        // unregister subscriptions in order to prevent sending of new messages
+        // to subscriptions with closing session
+        unregisterSubscriptions();
+
+        super.close();
+    }
+
+    void unregisterSubscriptions()
+    {
+        final Collection<Subscription_0_10> subscriptions = getSubscriptions();
+        for (Subscription_0_10 subscription_0_10 : subscriptions)
+        {
+            unregister(subscription_0_10);
+        }
     }
 }

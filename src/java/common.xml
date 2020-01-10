@@ -23,7 +23,7 @@
   <dirname property="project.root" file="${ant.file.common}"/>
 
   <property name="project.name"          value="qpid"/>
-  <property name="project.version"       value="0.12"/>
+  <property name="project.version"       value="0.14"/>
   <property name="project.url"           value="http://qpid.apache.org"/>
   <property name="project.groupid"       value="org.apache.qpid"/>
   <property name="project.namever"       value="${project.name}-${project.version}"/>
@@ -42,7 +42,6 @@
   <property name="build.report"          location="${build}/report"/>
   <property name="build.release"         location="${build}/release"/>
   <property name="build.release.prepare" location="${build.release}/prepare"/>
-  <property name="build.data"            location="${build.scratch}/data"/>
   <property name="build.plugins"         location="${build}/lib/plugins"/>
   <property name="build.coveragereport"  location="${build}/coverage"/>
   <property name="build.findbugs"        location="${build}/findbugs"/>
@@ -131,8 +130,6 @@
           </pathconvert>
  	</sequential>
   </macrodef>
-
-
 
   <macrodef name="jython">
     <attribute name="path"/>

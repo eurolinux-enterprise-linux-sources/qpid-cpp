@@ -132,7 +132,7 @@ public class BasicGetMethodHandler implements StateAwareMethodListener<BasicGetB
             public void deliverToClient(final Subscription sub, final QueueEntry entry, final long deliveryTag)
             throws AMQException
             {
-                singleMessageCredit.useCreditForMessage(entry.getMessage());
+                singleMessageCredit.useCreditForMessage(entry.getMessage().getSize());
                 if(entry.getMessage() instanceof AMQMessage)
                 {
                     session.getProtocolOutputConverter().writeGetOk(entry, channel.getChannelId(),
@@ -162,14 +162,7 @@ public class BasicGetMethodHandler implements StateAwareMethodListener<BasicGetB
         }
         else
         {
-            sub = new GetNoAckSubscription(channel,
-                                                 session,
-                                                 null,
-                                                 null,
-                                                 false,
-                                                 singleMessageCredit,
-                                                 getDeliveryMethod,
-                                                 getRecordMethod);
+            sub = SubscriptionFactoryImpl.INSTANCE.createBasicGetNoAckSubscription(channel, session, null, null, false, singleMessageCredit, getDeliveryMethod, getRecordMethod);
         }
 
         queue.registerSubscription(sub,false);
@@ -180,27 +173,5 @@ public class BasicGetMethodHandler implements StateAwareMethodListener<BasicGetB
 
     }
 
-    public static final class GetNoAckSubscription extends SubscriptionImpl.NoAckSubscription
-    {
-        public GetNoAckSubscription(AMQChannel channel, AMQProtocolSession protocolSession,
-                               AMQShortString consumerTag, FieldTable filters,
-                               boolean noLocal, FlowCreditManager creditManager,
-                                   ClientDeliveryMethod deliveryMethod,
-                                   RecordDeliveryMethod recordMethod)
-            throws AMQException
-        {
-            super(channel, protocolSession, consumerTag, filters, noLocal, creditManager, deliveryMethod, recordMethod);
-        }
 
-        public boolean isTransient()
-        {
-            return true;
-        }
-
-        public boolean wouldSuspend(QueueEntry msg)
-        {
-            return !getCreditManager().useCreditForMessage(msg.getMessage());
-        }
-
-    }
 }

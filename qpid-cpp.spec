@@ -11,8 +11,8 @@
 # ===========
 
 # Version numbers
-%global store_version       0.12
-%global store_svnrev        4463
+%global store_version       0.14
+%global store_svnrev        4490
 
 # NOTE: no more than one of these flags should be set at the same time!
 # RHEL-6 builds (the default) should have both these flags set to 0.
@@ -42,13 +42,13 @@
 #  5. If any interfaces have been added since the last public release, then increment age.
 #  6. If any interfaces have been removed or changed since the last public release, then set age to 0. 
 
-%global QPIDCOMMON_VERSION_INFO             5:0:0
+%global QPIDCOMMON_VERSION_INFO             6:0:0
 %global QPIDTYPES_VERSION_INFO              3:0:2
-%global QPIDBROKER_VERSION_INFO             5:0:0
-%global QPIDCLIENT_VERSION_INFO             5:0:0
-%global QPIDMESSAGING_VERSION_INFO          4:0:1
-%global RDMAWRAP_VERSION_INFO               5:0:0
-%global SSLCOMMON_VERSION_INFO              5:0:0
+%global QPIDBROKER_VERSION_INFO             6:0:0
+%global QPIDCLIENT_VERSION_INFO             6:0:0
+%global QPIDMESSAGING_VERSION_INFO          5:0:2
+%global RDMAWRAP_VERSION_INFO               6:0:0
+%global SSLCOMMON_VERSION_INFO              6:0:0
 
 # ===========
 
@@ -74,20 +74,22 @@
 %endif
 
 Name:           qpid-cpp
-Version:        0.12
-Release:        6%{?dist}
+Version:        0.14
+Release:        14%{?dist}
 Summary:        Libraries for Qpid C++ client applications
 Group:          System Environment/Libraries
 License:        ASL 2.0
 URL:            http://qpid.apache.org
 Source0:        qpid-%{version}.tar.gz
 Source1:        store-%{store_version}.tar.gz
-Source2:        cpp_doxygen_html.tar.gz
+Source2:        cpp_doxygen_html_%{version}.tar.gz
 Source3:        qpidd.1.gz
-Patch0:         0.12-mrg.patch
+Source4:        qpidd.sasldb
+Patch0:         mrg.patch
 %if %{fedora}
 Patch1:         so_number.patch
 %endif
+Patch2:         s390.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 %if %{rhel_5}
 ExclusiveArch:  i386 x86_64
@@ -281,8 +283,9 @@ the open AMQP messaging protocol.
 %{_initrddir}/qpidd
 %dir %_libdir/qpid/daemon
 %_libdir/qpid/daemon/acl.so
-%attr(755, qpidd, qpidd) %_localstatedir/lib/qpidd
-%attr(755, qpidd, qpidd) %_localstatedir/run/qpidd
+%attr(755, qpidd, qpidd) %dir %_localstatedir/lib/qpidd
+%attr(600, qpidd, qpidd) %config(noreplace) %_localstatedir/lib/qpidd/qpidd.sasldb
+%attr(755, qpidd, qpidd) %dir %_localstatedir/run/qpidd
 %doc %_mandir/man1/qpidd.*
 
 %pre server
@@ -592,6 +595,9 @@ exit 1
 %if %{fedora}
 %patch1
 %endif
+
+%patch2 -p2
+
 # Doxygen docs
 tar -xzf %{SOURCE2} --no-same-owner
 
@@ -602,7 +608,7 @@ tar -xzf %{SOURCE2} --no-same-owner
 # ===
 
 %build
-pushd cpp
+pushd %{_builddir}/qpid-%{version}/cpp
 ./bootstrap
 CXXFLAGS="%{optflags} -DNDEBUG -O3"
 
@@ -624,9 +630,10 @@ CXXFLAGS="%{optflags} -DNDEBUG -O3"
 --without-xml
 %endif
 make %{LIB_VERSION_MAKE_PARAMS}
+popd
 
 # Make perftest utilities
-pushd src/tests
+pushd %{_builddir}/qpid-%{version}/cpp/src/tests
 for ptest in %{perftests}; do
     make $ptest
 done
@@ -643,10 +650,9 @@ cat run_failover_soak.orig | sed -e "s#^src_root=..#src_root=/usr/sbin#" \
                                  -e "s#^exec #cd /opt/rh-qpid/clients; exec #" > run_failover_soak
 %endif
 popd
-popd
 
 # Store
-pushd ../store-%{store_version}
+pushd %{_builddir}/store-%{store_version}
 export CXXFLAGS="%{optflags} -DNDEBUG -O3" 
 ./bootstrap
 %configure --disable-static --disable-dependency-tracking --with-qpid-checkout=%{_builddir}/qpid-%{version}
@@ -658,15 +664,14 @@ popd
 %install
 rm -rf %{buildroot}
 mkdir -p -m0755 %{buildroot}/%_bindir
+
 pushd %{_builddir}/qpid-%{version}/cpp
 make install DESTDIR=%{buildroot}
 install -Dp -m0755 etc/qpidd %{buildroot}%{_initrddir}/qpidd
-install -d -m0755 %{buildroot}%{_localstatedir}/lib/qpidd
-install -d -m0755 %{buildroot}%_libdir/qpidd
-install -d -m0755 %{buildroot}/var/run/qpidd
+popd
 
 # Install perftest utilities
-pushd src/tests/
+pushd %{_builddir}/qpid-%{version}/cpp/src/tests
 for ptest in %{perftests}; do
   libtool --mode=install install -m755 $ptest %{buildroot}/%_bindir
 done
@@ -683,20 +688,18 @@ done
 %endif # !fedora
 popd
 
-# enable auth by default
-echo "auth=yes" >> %{buildroot}/etc/qpidd.conf
-
 #Store
 pushd %{_builddir}/store-%{store_version}
 make install DESTDIR=%{buildroot}
 install -d -m0775 %{buildroot}%{_localstatedir}/rhm
 install -d -m0755 %{buildroot}%_libdir/qpid/daemon
+popd
+
 rm -f %{buildroot}%_libdir/qpid/daemon/*.a
 rm -f %{buildroot}%_libdir/qpid/daemon/*.la
 rm -f %{buildroot}%_libdir/*.a
 rm -f %{buildroot}%_libdir/*.la
 rm -f %{buildroot}%_sysconfdir/rhmd.conf
-popd
 
 rm -f %{buildroot}%_libdir/*.a
 rm -f %{buildroot}%_libdir/*.l
@@ -705,7 +708,6 @@ rm -f %{buildroot}%_libdir/librdmawrap.so
 rm -f %{buildroot}%_libdir/libsslcommon.so
 rm -f %{buildroot}%_libdir/qpid/client/*.la
 rm -f %{buildroot}%_libdir/qpid/daemon/*.la
-rm -f %{buildroot}%_localstatedir/lib/qpidd/qpidd.sasldb
 
 # Remove all examples except the messaging dir
 # Remove this kludge when the makefile is fixed (ie does not install what is not wanted)!
@@ -730,7 +732,6 @@ rm -f  %{buildroot}%_libdir/_*
 rm -fr %{buildroot}%_libdir/qpid/tests
 rm -fr %{buildroot}%_libexecdir/qpid/tests
 rm -f  %{buildroot}%{ruby_sitearch}/*.la
-popd
 
 rm -rf %{buildroot}%_includedir/qmf
 rm -rf %{buildroot}%_includedir/qpid/agent
@@ -754,6 +755,14 @@ rm -f  %{buildroot}%_libdir/libqmfconsole.so.*
 rm -f  %{buildroot}%_libdir/libqmfengine.so.*
 rm -f  %{buildroot}%{ruby_sitearch}/qmfengine.so
 rm -f  %{buildroot}%{ruby_sitelib}/qmf.rb
+
+install -d -m0755 %{buildroot}%{_localstatedir}/lib/qpidd
+install -m0600 %{_sourcedir}/qpidd.sasldb %{buildroot}%{_localstatedir}/lib/qpidd
+install -d -m0755 %{buildroot}%_libdir/qpidd
+install -d -m0755 %{buildroot}/var/run/qpidd
+
+# enable auth by default
+echo "auth=yes" >> %{buildroot}/etc/qpidd.conf
 
 rm -f  %{buildroot}%_mandir/man1/*
 cp %{SOURCE3} %{buildroot}%_mandir/man1
@@ -793,6 +802,12 @@ rm -rf %{buildroot}
 # ===
 
 %changelog
+* Wed Mar 21 2012 Justin Ross <jross@redhat.com> - 0.14-14
+- Related: rhbz#765803
+- Rebase to 0.14
+- BZs: 730017, 759114, 760636, 786875, 791249, 795399, 797426, 798236,
+  800028, 801310
+
 * Tue Oct 18 2011 Ted Ross <tross@redhat.com> - 0.12-6
 - Related: rhbz#740912
 - Removed dependencies on xqilla and xerces-c for non-Intel architectures

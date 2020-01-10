@@ -25,8 +25,8 @@ import static org.apache.qpid.transport.Connection.State.CLOSING;
 import static org.apache.qpid.transport.Connection.State.NEW;
 import static org.apache.qpid.transport.Connection.State.OPEN;
 import static org.apache.qpid.transport.Connection.State.OPENING;
-import static org.apache.qpid.transport.Connection.State.RESUMING;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,12 +35,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslServer;
 
+import org.apache.qpid.framing.ProtocolVersion;
+import org.apache.qpid.transport.network.Assembler;
+import org.apache.qpid.transport.network.Disassembler;
+import org.apache.qpid.transport.network.InputHandler;
+import org.apache.qpid.transport.network.NetworkConnection;
+import org.apache.qpid.transport.network.OutgoingNetworkTransport;
+import org.apache.qpid.transport.network.Transport;
 import org.apache.qpid.transport.network.security.SecurityLayer;
+import org.apache.qpid.transport.network.security.SecurityLayerFactory;
 import org.apache.qpid.transport.util.Logger;
 import org.apache.qpid.transport.util.Waiter;
 import org.apache.qpid.util.Strings;
@@ -65,6 +72,7 @@ public class Connection extends ConnectionInvoker
     //Usable channels are numbered 0 to <ChannelMax> - 1
     public static final int MAX_CHANNEL_MAX = 0xFFFF;
     public static final int MIN_USABLE_CHANNEL_NUM = 0;
+
 
     public enum State { NEW, CLOSED, OPENING, OPEN, CLOSING, CLOSE_RCVD, RESUMING }
 
@@ -113,17 +121,14 @@ public class Connection extends ConnectionInvoker
     private SaslServer saslServer;
     private SaslClient saslClient;
     private int idleTimeout = 0;
-    private String _authorizationID;
     private Map<String,Object> _serverProperties;
     private String userID;
     private ConnectionSettings conSettings;
     private SecurityLayer securityLayer;
     private String _clientId;
-    
-    private static final AtomicLong idGenerator = new AtomicLong(0);
-    private final long _connectionId = idGenerator.incrementAndGet();
+
     private final AtomicBoolean connectionLost = new AtomicBoolean(false);
-    
+
     public Connection() {}
 
     public void setConnectionDelegate(ConnectionDelegate delegate)
@@ -234,14 +239,24 @@ public class Connection extends ConnectionInvoker
             conSettings = settings;
             state = OPENING;
             userID = settings.getUsername();
-            delegate = new ClientDelegate(settings);
-           
-            TransportBuilder transport = new TransportBuilder();
-            transport.init(this);
-            this.sender = transport.buildSenderPipe();
-            transport.buildReceiverPipe(this);
-            this.securityLayer = transport.getSecurityLayer();
-            
+
+            securityLayer = SecurityLayerFactory.newInstance(getConnectionSettings());
+
+            OutgoingNetworkTransport transport = Transport.getOutgoingTransportInstance(ProtocolVersion.v0_10);
+            Receiver<ByteBuffer> secureReceiver = securityLayer.receiver(new InputHandler(new Assembler(this)));
+            if(secureReceiver instanceof ConnectionListener)
+            {
+                addConnectionListener((ConnectionListener)secureReceiver);
+            }
+
+            NetworkConnection network = transport.connect(settings, secureReceiver, null);
+            final Sender<ByteBuffer> secureSender = securityLayer.sender(network.getSender());
+            if(secureSender instanceof ConnectionListener)
+            {
+                addConnectionListener((ConnectionListener)secureSender);
+            }
+            sender = new Disassembler(secureSender, settings.getMaxFrameSize());
+
             send(new ProtocolHeader(1, 0, 10));
 
             Waiter w = new Waiter(lock, timeout);
@@ -322,23 +337,31 @@ public class Connection extends ConnectionInvoker
             Waiter w = new Waiter(lock, timeout);
             while (w.hasTime() && state != OPEN && error == null)
             {
-                w.await();                
+                w.await();
             }
-            
+
             if (state != OPEN)
             {
                 throw new ConnectionException("Timed out waiting for connection to be ready. Current state is :" + state);
             }
-            
+
             Session ssn = _sessionFactory.newSession(this, name, expiry);
-            sessions.put(name, ssn);
+            registerSession(ssn);
             map(ssn);
             ssn.attach();
             return ssn;
         }
     }
 
-    void removeSession(Session ssn)
+    public void registerSession(Session ssn)
+    {
+        synchronized (lock)
+        {
+            sessions.put(ssn.getName(),ssn);
+        }
+    }
+
+    public void removeSession(Session ssn)
     {
         synchronized (lock)
         {
@@ -351,11 +374,6 @@ public class Connection extends ConnectionInvoker
         assert sessionFactory != null;
 
         _sessionFactory = sessionFactory;
-    }
-
-    public long getConnectionId()
-    {
-        return _connectionId;
     }
 
     public ConnectionDelegate getConnectionDelegate()
@@ -406,7 +424,7 @@ public class Connection extends ConnectionInvoker
         else
         {
             throw new ProtocolViolationException(
-					"Received frames for an already dettached session", null);
+					"Received frames for an already detached session", null);
         }
     }
 
@@ -455,7 +473,7 @@ public class Connection extends ConnectionInvoker
         }
     }
 
-    protected Session getSession(int channel)
+    public Session getSession(int channel)
     {
         synchronized (lock)
         {
@@ -467,26 +485,12 @@ public class Connection extends ConnectionInvoker
     {
         synchronized (lock)
         {
-            List <Binary> transactedSessions = new ArrayList();
             for (Session ssn : sessions.values())
             {
-                if (ssn.isTransacted())
-                {
-                    transactedSessions.add(ssn.getName());
-                    ssn.setState(Session.State.CLOSED);
-                }
-                else
-                {                
-                    map(ssn);
-                    ssn.attach();
-                    ssn.resume();
-                }
+                map(ssn);
+                ssn.resume();
             }
-            
-            for (Binary ssn_name : transactedSessions)
-            {
-                sessions.remove(ssn_name);
-            }
+
             setState(OPEN);
         }
     }
@@ -522,10 +526,6 @@ public class Connection extends ConnectionInvoker
     {
         synchronized (lock)
         {
-            for (Session ssn : channels.values())
-            {
-                ssn.closeCode(close);
-            }
             ConnectionCloseCode code = close.getReplyCode();
             if (code != ConnectionCloseCode.NORMAL)
             {
@@ -573,12 +573,12 @@ public class Connection extends ConnectionInvoker
     {
         close(ConnectionCloseCode.NORMAL, null);
     }
-    
+
     public void mgmtClose()
     {
         close(ConnectionCloseCode.CONNECTION_FORCED, "The connection was closed using the broker's management interface.");
     }
-    
+
     public void close(ConnectionCloseCode replyCode, String replyText, Option ... _options)
     {
         synchronized (lock)
@@ -652,16 +652,6 @@ public class Connection extends ConnectionInvoker
         return idleTimeout;
     }
 
-    public void setAuthorizationID(String authorizationID)
-    {
-        _authorizationID = authorizationID;
-    }
-
-    public String getAuthorizationID()
-    {
-        return _authorizationID;
-    }
-
     public String getUserID()
     {
         return userID;
@@ -691,12 +681,12 @@ public class Connection extends ConnectionInvoker
     {
         return conSettings;
     }
-    
+
     public SecurityLayer getSecurityLayer()
     {
         return securityLayer;
     }
-    
+
     public boolean isConnectionResuming()
     {
         return connectionLost.get();
@@ -705,5 +695,19 @@ public class Connection extends ConnectionInvoker
     protected Collection<Session> getChannels()
     {
         return channels.values();
+    }
+
+    public boolean hasSessionWithName(final byte[] name)
+    {
+        return sessions.containsKey(new Binary(name));
+    }
+
+    public void notifyFailoverRequired()
+    {
+        List<Session> values = new ArrayList<Session>(channels.values());
+        for (Session ssn : values)
+        {
+            ssn.notifyFailoverRequired();
+        }
     }
 }

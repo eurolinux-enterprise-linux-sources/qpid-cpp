@@ -22,6 +22,8 @@ package org.apache.qpid.transport;
 
 import java.util.Map;
 
+import org.apache.qpid.configuration.ClientProperties;
+
 /**
  * A ConnectionSettings object can only be associated with
  * one Connection object. I have added an assertion that will
@@ -30,13 +32,16 @@ import java.util.Map;
  */
 public class ConnectionSettings
 {
+    public static final String WILDCARD_ADDRESS = "*";
+
     String protocol = "tcp";
     String host = "localhost";
     String vhost;
     String username = "guest";
     String password = "guest";
     int port = 5672;
-    boolean tcpNodelay = Boolean.getBoolean("amqj.tcp_nodelay");
+    boolean tcpNodelay = Boolean.valueOf(System.getProperty(ClientProperties.QPID_TCP_NODELAY_PROP_NAME,
+                                         System.getProperty(ClientProperties.AMQJ_TCP_NODELAY_PROP_NAME, "true")));
     int maxChannelCount = 32767;
     int maxFrameSize = 65535;
     int heartbeatInterval;
@@ -56,7 +61,7 @@ public class ConnectionSettings
     boolean verifyHostname;
     
     // SASL props
-    String saslMechs = System.getProperty("qpid.sasl_mechs", "PLAIN");
+    String saslMechs = System.getProperty("qpid.sasl_mechs", null);
     String saslProtocol = System.getProperty("qpid.sasl_protocol", "AMQP");
     String saslServerName = System.getProperty("qpid.sasl_server_name", "localhost");
     boolean useSASLEncryption;
