@@ -75,7 +75,7 @@
 
 Name:           qpid-cpp
 Version:        0.14
-Release:        14%{?dist}
+Release:        16%{?dist}
 Summary:        Libraries for Qpid C++ client applications
 Group:          System Environment/Libraries
 License:        ASL 2.0
@@ -94,7 +94,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 %if %{rhel_5}
 ExclusiveArch:  i386 x86_64
 %endif
-Vendor:         Red Hat, Inc.
 
 BuildRequires: boost-devel
 BuildRequires: libtool
@@ -152,7 +151,9 @@ the AMQP protocol.
 %package client
 Summary: Libraries for Qpid C++ client applications
 Group: System Environment/Libraries
-Requires: boost
+Requires: boost-filesystem
+Requires: boost-program-options
+Requires: boost-system
 Obsoletes: qpidc
 
 Requires(post):/sbin/chkconfig
@@ -802,7 +803,15 @@ rm -rf %{buildroot}
 # ===
 
 %changelog
-* Wed Mar 21 2012 Justin Ross <jross@redhat.com> - 0.14-14
+* Tue Apr 24 2012 Ted Ross <tross@redhat.com> - 0.14-16
+- Related: rhbz#703563
+- Related: rhbz#771961
+- Related: rhbz#785919
+- Related: rhbz#788901
+- Related: rhbz#799269
+- Related: rhbz#802807
+
+* Wed Mar 21 2012 Justin Ross <jross@redhat.com> - 0.14-15
 - Related: rhbz#765803
 - Rebase to 0.14
 - BZs: 730017, 759114, 760636, 786875, 791249, 795399, 797426, 798236,

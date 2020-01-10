@@ -1,7 +1,7 @@
 From 2f116f2652ebad206a2589b1da4977ab3a1d824e Mon Sep 17 00:00:00 2001
 From: Ted Ross <tross@apache.org>
 Date: Tue, 22 Nov 2011 21:32:48 +0000
-Subject: [PATCH 01/70] NO-JIRA - Fixed the handling of functions with ignored
+Subject: [PATCH 01/79] NO-JIRA - Fixed the handling of functions with ignored
  return values.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1205183 13f79535-47bb-0310-9956-ffa450edef68
@@ -98,12 +98,12 @@ index 10674b5..de1b42d 100644
  }
  
 -- 
-1.7.7.6
+1.7.6.5
 
 From ffe3036843d843196e66f638267890a79c40880b Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Tue, 8 Nov 2011 20:25:15 +0000
-Subject: [PATCH 02/70] QPID-2643 Support Visual Studio 2010
+Subject: [PATCH 02/79] QPID-2643 Support Visual Studio 2010
 
 This check in for the dotnet binding separates the Visual Studio
 project and solution files from the source files. The projects and solutions
@@ -6472,12 +6472,12 @@ index 0000000..8e02304
 +</Project>
 \ No newline at end of file
 -- 
-1.7.7.6
+1.7.6.5
 
 From f1b7db6bfe98339c3e75957ebffc0045fc1c2f0b Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Tue, 8 Nov 2011 22:46:14 +0000
-Subject: [PATCH 03/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 03/79] QPID-2643 Visual Studio 2010
 
 Add msvc9 or msvc10 to path names in generated scripts to accomodate recent changes.
 Add more/better info to prompts to improve user experience.
@@ -6763,12 +6763,12 @@ index 23fc742..162ac27 100644
 +Write-Host "Press any key to continue ..."
 +$x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 -- 
-1.7.7.6
+1.7.6.5
 
 From 6278c54bc9a4bf765f679ac8cfd6269a1c6889d5 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Tue, 8 Nov 2011 22:49:34 +0000
-Subject: [PATCH 04/70] QPID-2640 Visual Studio 2010
+Subject: [PATCH 04/79] QPID-2640 Visual Studio 2010
 
 Add new pdb-name munging logic for 2010.
 Add Boost_ADDITIONAL_VERSION setting to aid windows-based cmake.
@@ -6808,12 +6808,12 @@ index a903de2..100f7df 100644
  if(NOT Boost_FOUND)
    message(FATAL_ERROR "Boost C++ libraries not found.  Please install or try setting BOOST_ROOT")
 -- 
-1.7.7.6
+1.7.6.5
 
 From 7624af5cb56be2265c5e4f3a1396d05f68b79a39 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Wed, 9 Nov 2011 01:11:33 +0000
-Subject: [PATCH 05/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 05/79] QPID-2643 Visual Studio 2010
 
 Fix template source file to refer to new relative path.
 
@@ -6836,12 +6836,12 @@ index 85b1564..1c529c2 100644
  #define APSTUDIO_READONLY_SYMBOLS
  /////////////////////////////////////////////////////////////////////////////
 -- 
-1.7.7.6
+1.7.6.5
 
 From 13d3287f6dea134c69dd97b4939be50f186bcd60 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Thu, 10 Nov 2011 20:14:45 +0000
-Subject: [PATCH 06/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 06/79] QPID-2643 Visual Studio 2010
 
 Add the Visual Studio 2010 (msvc10) solution and project files for the .NET Binding.
 
@@ -9619,12 +9619,12 @@ index 0000000..673877e
 +</Project>
 \ No newline at end of file
 -- 
-1.7.7.6
+1.7.6.5
 
 From 77d626390fa1c780a165dc5e51bc1c11c1373fdf Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Thu, 10 Nov 2011 20:31:46 +0000
-Subject: [PATCH 07/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 07/79] QPID-2643 Visual Studio 2010
 
 Repair a stray file committed in r1200522
 
@@ -9669,12 +9669,12 @@ index d672108..2500c2c 100644
  Global
  	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 -- 
-1.7.7.6
+1.7.6.5
 
 From 826734289cf699be20521f8be4d34cb61a8d1f3c Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Fri, 11 Nov 2011 14:09:11 +0000
-Subject: [PATCH 08/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 08/79] QPID-2643 Visual Studio 2010
 
 Observe new and moved files in the EXTRA_DIST list. (more to come)
 
@@ -9925,12 +9925,12 @@ index b5c1f6d..baa5e39 100644
    ../../../src/windows/resources/template-resource.rc \
    ../../../src/windows/resources/version-resource.h 
 -- 
-1.7.7.6
+1.7.6.5
 
 From 3a258e8c5ed9324353e51339085b12e59bd62f78 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Fri, 11 Nov 2011 17:41:55 +0000
-Subject: [PATCH 09/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 09/79] QPID-2643 Visual Studio 2010
 
 For the WinSDK kit: generate VS2010 .NET examples solution and project files.
 Organize them into msvc9 and msvc10 directories.
@@ -14514,12 +14514,12 @@ index 6db55b5..0000000
 -	EndGlobalSection
 -EndGlobal
 -- 
-1.7.7.6
+1.7.6.5
 
 From 2c405fbd7fbe6256d70cca5c6986d0b2d872b9b0 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Wed, 23 Nov 2011 18:58:50 +0000
-Subject: [PATCH 10/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 10/79] QPID-2643 Visual Studio 2010
 
 modify project and script to support refactoring for VS2010.
 
@@ -15081,12 +15081,12 @@ index bea46da..ae39742 100644
 +               $randomness `
 +               $global:vsVersion
 -- 
-1.7.7.6
+1.7.6.5
 
 From 7ad8c92b9bc0d0be6d70a419436da25d1b2a7a53 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Wed, 23 Nov 2011 23:54:15 +0000
-Subject: [PATCH 11/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 11/79] QPID-2643 Visual Studio 2010
 
 Add a standalone cmakelists.txt file to be used for building
 a WinSDK. Currently the cpp/examples area has hard-coded
@@ -15222,12 +15222,12 @@ index 0000000..6f0c28c
 +  
 +endif (NOT BUILD_WINSDK)
 -- 
-1.7.7.6
+1.7.6.5
 
 From e97798625327abecf0065dc080746caaa773dace Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Thu, 1 Dec 2011 21:10:17 +0000
-Subject: [PATCH 12/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 12/79] QPID-2643 Visual Studio 2010
 
 Try to dodge several issues that appear on 64-bit hosts with both VS2008 and
 VS2010 installed at the same time. The new bld-winsdk.ps1 script requires
@@ -15705,12 +15705,12 @@ index 6f0c28c..dd0d64f 100644
 -  
 -endif (NOT BUILD_WINSDK)
 -- 
-1.7.7.6
+1.7.6.5
 
 From 40c0fe1c7df392f321612beb39497e095592689b Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Fri, 2 Dec 2011 23:11:32 +0000
-Subject: [PATCH 13/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 13/79] QPID-2643 Visual Studio 2010
 
 In the SDK build script remove VS2008 projects and replace them
 with a CMakeLists.txt that can generate example projects and solutions
@@ -15720,9 +15720,9 @@ Tidy up the actual CMake script.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1209774 13f79535-47bb-0310-9956-ffa450edef68
 ---
- qpid/cpp/bld-winsdk.ps1                       |   27 ++++++++++++------
+ qpid/cpp/bld-winsdk.ps1                       |   25 +++++++++++-----
  qpid/cpp/examples/winsdk-cmake/CMakeLists.txt |   38 ++++++++++++------------
- 2 files changed, 37 insertions(+), 28 deletions(-)
+ 2 files changed, 36 insertions(+), 27 deletions(-)
 
 diff --git a/qpid/cpp/bld-winsdk.ps1 b/qpid/cpp/bld-winsdk.ps1
 index f3d1267..cf90188 100644
@@ -15851,12 +15851,12 @@ index dd0d64f..dc6a7c8 100644
  
  macro(add_example srcdirectory example)
 -- 
-1.7.7.6
+1.7.6.5
 
 From d2116523ae188556a54052996054eac3fc6f3180 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Tue, 6 Dec 2011 21:10:56 +0000
-Subject: [PATCH 14/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 14/79] QPID-2643 Visual Studio 2010
 
 Use separate directories for each version of Visual Studio.
 This lets parallel build use private sandboxes and work better.
@@ -15921,12 +15921,12 @@ index cf90188..7c691c9 100644
      # Zip the /bin PDB files
      &'7z' a -mx9 ".\$install_dir\bin\Debug\symbols-debug.zip"     ".\$install_dir\bin\DebugPDB\*.pdb"
 -- 
-1.7.7.6
+1.7.6.5
 
 From 20ca7425c92c169764e1e67fb3e9016ccca6f631 Mon Sep 17 00:00:00 2001
 From: Keith Wall <kwall@apache.org>
 Date: Mon, 28 Nov 2011 09:26:58 +0000
-Subject: [PATCH 15/70] BZ 733383 Cherry-picking from Qpid trunk, QPID-3642,
+Subject: [PATCH 15/79] BZ 733383 Cherry-picking from Qpid trunk, QPID-3642,
  QPID-3640: Add Dead Letter Queue functionality for
  0-10 path. Also, it fixes issue with setting of
  redelivered flag for pre-fetched messages as DLQ
@@ -16616,12 +16616,12 @@ index 045deab..653ab8f 100644
  
      private void expect(String text, Message msg) throws JMSException
 -- 
-1.7.7.6
+1.7.6.5
 
 From 81ff0bc597a5d7d67944a3116ef73e7ba8c67e42 Mon Sep 17 00:00:00 2001
 From: Rajith Attapattu <rajith77@gmail.com>
 Date: Wed, 7 Dec 2011 11:55:39 -0500
-Subject: [PATCH 16/70] BZ 733383. The automatica cherry-pick failed to
+Subject: [PATCH 16/79] BZ 733383. The automatica cherry-pick failed to
  compile due to a) The _prefetchMessageTags variable
  not being included in the AMQSession.java for some
  reason. b) The Subscription_0_10.java not compiling
@@ -16726,12 +16726,12 @@ index d34290e..7a36420 100644
      protected ConcurrentLinkedQueue<Long> _unacknowledgedMessageTags = new ConcurrentLinkedQueue<Long>();
  
 -- 
-1.7.7.6
+1.7.6.5
 
 From 8828200264729957fce38f79164679ea9d79e412 Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Wed, 7 Dec 2011 19:33:05 +0000
-Subject: [PATCH 17/70] Bug 761186, QPID-3659 Added a method in
+Subject: [PATCH 17/79] Bug 761186, QPID-3659 Added a method in
  AMQBrokerDetails to handle boolean properties which
  defaults to "True". I also added a log message to
  printout the TCP_NODELAY value returned by the
@@ -16806,12 +16806,12 @@ index e1d1596..838a662 100644
  
              _socket.connect(new InetSocketAddress(address, settings.getPort()));
 -- 
-1.7.7.6
+1.7.6.5
 
 From d095faa828b032df2f4f6ca2fae288ce5af18181 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Wed, 7 Dec 2011 21:45:50 +0000
-Subject: [PATCH 18/70] QPID-2643 Visual Studio 2010
+Subject: [PATCH 18/79] QPID-2643 Visual Studio 2010
 
 Modify the VS2008 variants of dotnet_examples to work with new directory
 structure.
@@ -17916,12 +17916,12 @@ index 7c691c9..51c1879 100644
      # Zip the /bin PDB files
      &'7z' a -mx9 ".\$install_dir\bin\Debug\symbols-debug.zip"     ".\$install_dir\bin\DebugPDB\*.pdb"
 -- 
-1.7.7.6
+1.7.6.5
 
 From b02ebabdb6d943cc54b5fc55d4d10cca1cc1d3da Mon Sep 17 00:00:00 2001
 From: Kenneth Anthony Giusti <kgiusti@apache.org>
 Date: Tue, 29 Nov 2011 13:34:09 +0000
-Subject: [PATCH 19/70] Bugs 734729 and 756446, QPID-3648: fix cleanup of
+Subject: [PATCH 19/79] Bugs 734729 and 756446, QPID-3648: fix cleanup of
  remote agent on broker shutdown.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1207877 13f79535-47bb-0310-9956-ffa450edef68
@@ -17952,12 +17952,12 @@ index 5799a1a..b2a039d 100644
          for (ManagementObjectMap::iterator iter = managementObjects.begin ();
               iter != managementObjects.end ();
 -- 
-1.7.7.6
+1.7.6.5
 
 From a9a714d24e51d8b92d759711a322516418c4d9c5 Mon Sep 17 00:00:00 2001
 From: Alan Conway <aconway@apache.org>
 Date: Thu, 8 Dec 2011 20:04:46 +0000
-Subject: [PATCH 20/70] Bug 759114, QPID-3669: Configuration option for path
+Subject: [PATCH 20/79] Bug 759114, QPID-3669: Configuration option for path
  to watchdog executable.
 
 Added --watchdog-exec option to watchdog plugin to specify path to the
@@ -18011,12 +18011,12 @@ index 57ba5cf..f919041 100644
          exit(1);
      }
 -- 
-1.7.7.6
+1.7.6.5
 
 From c6545d78943aa53dd0d54b3b2aa270fc6e1ee594 Mon Sep 17 00:00:00 2001
 From: Kenneth Anthony Giusti <kgiusti@apache.org>
 Date: Wed, 7 Dec 2011 21:50:47 +0000
-Subject: [PATCH 21/70] Bug 693845, QPID-3667: do not set the user-id header
+Subject: [PATCH 21/79] Bug 693845, QPID-3667: do not set the user-id header
  in the messages if the connection does not provide a
  proper user-id
 
@@ -18039,12 +18039,12 @@ index f0fba2d..e8be643 100644
        # prevent topic queues from filling up (and causing the agents to
        # disconnect) by discarding the oldest queued messages when full.
 -- 
-1.7.7.6
+1.7.6.5
 
 From 5dbdfc727f9e997f8c1ca9f01d5d05075fc5ce93 Mon Sep 17 00:00:00 2001
 From: Nuno Santos <nsantos@apache.org>
 Date: Tue, 29 Nov 2011 21:41:03 +0000
-Subject: [PATCH 22/70] Bug 758853, QPID-3533: qpid-config does not properly
+Subject: [PATCH 22/79] Bug 758853, QPID-3533: qpid-config does not properly
  set some options if value evaluates to False --
  applied patch from bpdeman
 
@@ -18133,12 +18133,12 @@ index bb49b9d..45cf01e 100755
  
          if config._msgGroupHeader:
 -- 
-1.7.7.6
+1.7.6.5
 
 From 53643632d8b01bcf31a502b90aefaa5367486e2f Mon Sep 17 00:00:00 2001
 From: Kenneth Anthony Giusti <kgiusti@apache.org>
 Date: Wed, 9 Nov 2011 18:46:57 +0000
-Subject: [PATCH 23/70] Bug 760636: add timestamp of oldest msg per group to
+Subject: [PATCH 23/79] Bug 760636: add timestamp of oldest msg per group to
  query output
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1199914 13f79535-47bb-0310-9956-ffa450edef68
@@ -18169,12 +18169,12 @@ index 00d1a58..3a996db 100644
          groups.push_back(info);
      }
 -- 
-1.7.7.6
+1.7.6.5
 
 From 6fbd0c932476e71c68c57e59ac853dd16e04ffbf Mon Sep 17 00:00:00 2001
 From: Alan Conway <aconway@apache.org>
 Date: Tue, 6 Dec 2011 15:56:40 +0000
-Subject: [PATCH 24/70] Bug 730017, QPID-3652: Fix cluster authentication.
+Subject: [PATCH 24/79] Bug 730017, QPID-3652: Fix cluster authentication.
 
 Only allow brokers that authenticate as the cluster-username to join a cluster.
 
@@ -19111,12 +19111,12 @@ index 899625f..97c1585 100644
  
      <!-- New member or updater is ready as an active member. -->
 -- 
-1.7.7.6
+1.7.6.5
 
 From 7f2be8a293321b593e3cc00a3737761d7241c3ba Mon Sep 17 00:00:00 2001
 From: Andrew Donald Kennedy <grkvlt@apache.org>
 Date: Tue, 29 Nov 2011 03:13:55 +0000
-Subject: [PATCH 25/70] QPID-3489: Added org.apache.qpid.server.message to
+Subject: [PATCH 25/79] QPID-3489: Added org.apache.qpid.server.message to
  exported packages for broker
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/branches/0.14@1207741 13f79535-47bb-0310-9956-ffa450edef68
@@ -19137,12 +19137,12 @@ index aaab4f7..badeffc 100644
  org.apache.qpid.server.persistent=0.0.0
  org.apache.qpid.server.plugins=0.0.0
 -- 
-1.7.7.6
+1.7.6.5
 
 From 76a240c38048a836b464876ffa7ec446968ad933 Mon Sep 17 00:00:00 2001
 From: Andrew Stitcher <astitcher@apache.org>
 Date: Wed, 30 Nov 2011 23:30:29 +0000
-Subject: [PATCH 26/70] QPID-3654: ANONYMOUS SASL mechanism does not work on
+Subject: [PATCH 26/79] QPID-3654: ANONYMOUS SASL mechanism does not work on
  Java client Added a CallbackHandler for the ANONYMOUS
  mechanism (even though it should never be called) -
  This is necessary because the client uses the map of
@@ -19176,12 +19176,12 @@ index b04a756..8855a04 100644
  PLAIN.6=org.apache.qpid.client.security.UsernamePasswordCallbackHandler
 +ANONYMOUS.7=org.apache.qpid.client.security.UsernamePasswordCallbackHandler
 -- 
-1.7.7.6
+1.7.6.5
 
 From 69e23813b627a151494ae09184d42fe348f792f1 Mon Sep 17 00:00:00 2001
 From: Robert Gemmell <robbie@apache.org>
 Date: Thu, 1 Dec 2011 11:37:04 +0000
-Subject: [PATCH 27/70] QPID-3582: stop client reporting "Unable to load
+Subject: [PATCH 27/79] QPID-3582: stop client reporting "Unable to load
  custom SASL providers" during initial connection
 
 merged from trunk r1205197
@@ -19209,12 +19209,12 @@ index 0d48dd5..a33e8a6 100644
      public AMQConnectionDelegate_0_10(AMQConnection conn)
      {
 -- 
-1.7.7.6
+1.7.6.5
 
 From 675d0d85f92b7257518e36e561c43eb7c265de35 Mon Sep 17 00:00:00 2001
 From: Andrew Stitcher <astitcher@redhat.com>
 Date: Tue, 6 Dec 2011 17:43:13 -0500
-Subject: [PATCH 28/70] Squashed commit of the entire JCA development:
+Subject: [PATCH 28/79] Squashed commit of the entire JCA development:
 
 commit c4860d79c7aefddc45ded49bd19f3e934246ae95
 Author: Andrew Stitcher <astitcher@redhat.com>
@@ -47026,12 +47026,12 @@ literal 0
 HcmV?d00001
 
 -- 
-1.7.7.6
+1.7.6.5
 
 From 399130e1407f92cee02d1055eacffc544be47ef3 Mon Sep 17 00:00:00 2001
 From: Andrew Stitcher <astitcher@redhat.com>
 Date: Thu, 17 Nov 2011 14:56:17 -0500
-Subject: [PATCH 29/70] Remove geronimo for Red Hat JCA release - Remove
+Subject: [PATCH 29/79] Remove geronimo for Red Hat JCA release - Remove
  Geronimo related files - Remove Geronimo readmes -
  Change default example build target to jboss
 
@@ -55445,12 +55445,12 @@ zBblVBLiL4#N1lL(p}Tu+F+lkT{}&)Jf1+=i7a(TD+myBiPM|DuOB8*%a0}Y0SCr8N
 aPy}_h90(3(_S*GtSI48#k}4n~)BXn=g%{NT
 
 -- 
-1.7.7.6
+1.7.6.5
 
 From f6b2d0876195d22c880d55b84b5fce21d782f79e Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Thu, 8 Dec 2011 20:27:04 +0000
-Subject: [PATCH 30/70] QPID-2634 VS2010 - Tidy up the Csharp WinSDK VS2010
+Subject: [PATCH 30/79] QPID-2634 VS2010 - Tidy up the Csharp WinSDK VS2010
  project files.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1212087 13f79535-47bb-0310-9956-ffa450edef68
@@ -56419,12 +56419,12 @@ index bf79556..3d5f94e 100644
    </ItemGroup>
    <ItemGroup>
 -- 
-1.7.7.6
+1.7.6.5
 
 From 735a7938ce6c894249820e5b57c92e70a9393608 Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Fri, 9 Dec 2011 08:01:19 -0500
-Subject: [PATCH 31/70] QPID-3464: Build Improvements (autotools) [inspired by
+Subject: [PATCH 31/79] QPID-3464: Build Improvements (autotools) [inspired by
   Jan-Marek Glogowski] - Simplified the python binding
  build QPID-3458: Install compiled _cqpid.so for SWIG
  python bindings in site-packages directory - Put the
@@ -56585,12 +56585,12 @@ index 4fc5edc..e7a9d87 100644
  	qmfgen/templates/Args.h \
  	qmfgen/templates/Class.cpp \
 -- 
-1.7.7.6
+1.7.6.5
 
 From 3227251227c05f27a1a7f7f16764787e87364873 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Wed, 7 Dec 2011 14:43:13 +0000
-Subject: [PATCH 32/70] Bug 730017, QPID-3652: Fix cluster authentication
+Subject: [PATCH 32/79] Bug 730017, QPID-3652: Fix cluster authentication
 
 Add missing additions to CMakeLists.
 Add windows export macro so new functions are published in dll.
@@ -56644,12 +56644,12 @@ index c82d563..8b11df5 100644
 -#endif  /*!QPID_CLUSTER_URLARRAY_H*/
 +#endif  /* !QPID_CLUSTER_URLARRAY_H */
 -- 
-1.7.7.6
+1.7.6.5
 
 From 6f12a7e9f10657b7d99b34102a25cd2a81444ef7 Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Mon, 12 Dec 2011 16:04:27 +0000
-Subject: [PATCH 33/70] Bug 755718, QPID-3625 Comitting a patch from Weston
+Subject: [PATCH 33/79] Bug 755718, QPID-3625 Comitting a patch from Weston
  Price. (cherry picked from commit
  e7b630fd35055c9b80e3799c6939c7f3687b0c02)
 
@@ -56873,12 +56873,12 @@ index 6b91218..aaabf61 100644
      /**
       * Gets the topic session associated with this <CODE>XATopicSession</CODE>.
 -- 
-1.7.7.6
+1.7.6.5
 
 From f342045555655d550fadc444cf3e925b10424d12 Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Mon, 12 Dec 2011 13:54:18 -0500
-Subject: [PATCH 34/70] Bug 755718: Use Session.CLIENT_ACKNOWLEDGE
+Subject: [PATCH 34/79] Bug 755718: Use Session.CLIENT_ACKNOWLEDGE
 
 ---
  .../org/apache/qpid/ra/QpidResourceAdapter.java    |    3 ++-
@@ -56899,12 +56899,12 @@ index d56f520..f27d85d 100644
        {
           _log.debug("Using session " + Util.asString(result));
 -- 
-1.7.7.6
+1.7.6.5
 
 From f8fd1265fd467cfe0b4535b840a77a29f99e867a Mon Sep 17 00:00:00 2001
 From: Ted Ross <tross@redhat.com>
 Date: Wed, 14 Sep 2011 15:02:17 -0400
-Subject: [PATCH 35/70] Patch to maintain ABI compatibility
+Subject: [PATCH 35/79] Patch to maintain ABI compatibility
 
 ---
  qpid/cpp/include/qpid/messaging/Session.h |    9 +++++----
@@ -56970,12 +56970,12 @@ index f563d5d..cf6fd2a 100644
  VariantType Variant::getType() const { return impl ? impl->getType() : VAR_VOID; }
  bool Variant::isVoid() const { return getType() == VAR_VOID; }
 -- 
-1.7.7.6
+1.7.6.5
 
 From 66e017d0dadbbe01550b495c5d1c331893bb33d0 Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Fri, 9 Dec 2011 16:40:56 +0000
-Subject: [PATCH 36/70] QPID-3671 WinSDK is incomplete. Adds .NET PDB files
+Subject: [PATCH 36/79] QPID-3671 WinSDK is incomplete. Adds .NET PDB files
  and fixes Readme-winsdk.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1212505 13f79535-47bb-0310-9956-ffa450edef68
@@ -57169,12 +57169,12 @@ index 51c1879..530a1a1 100644
  
  ################################
 -- 
-1.7.7.6
+1.7.6.5
 
 From 97b476160982c8d13dbc660029006bd7d0c0b95d Mon Sep 17 00:00:00 2001
 From: "Charles E. Rolke" <chug@apache.org>
 Date: Fri, 9 Dec 2011 20:56:09 +0000
-Subject: [PATCH 37/70] QPID-3671 WinSDK - Executables are built release; copy
+Subject: [PATCH 37/79] QPID-3671 WinSDK - Executables are built release; copy
  them to bin/release.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1212625 13f79535-47bb-0310-9956-ffa450edef68
@@ -57196,12 +57196,12 @@ index 530a1a1..1cae658 100644
  
      $preserve=(
 -- 
-1.7.7.6
+1.7.6.5
 
 From 16c75888cac09b5be083b8fa56a1e1c7991172d7 Mon Sep 17 00:00:00 2001
 From: Ted Ross <tross@redhat.com>
 Date: Mon, 9 Jan 2012 12:02:59 -0500
-Subject: [PATCH 38/70] Bug 772684 - Revert upstream changes to default SASL
+Subject: [PATCH 38/79] Bug 772684 - Revert upstream changes to default SASL
  configuration (This change is not upstream)
 
 ---
@@ -57293,12 +57293,12 @@ index 0872bc2..3197d77 100644
 -
 -
 -- 
-1.7.7.6
+1.7.6.5
 
 From 6f4363e3b530b6df9e1e7119b833149ec441f88d Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Tue, 10 Jan 2012 16:03:04 +0000
-Subject: [PATCH 39/70] Bug 768374 - TCK:
+Subject: [PATCH 39/79] Bug 768374 - TCK:
  com.sun.ts.tests.jms.ee.all.closedQueueConnection.ClosedQueueConnectionTests.closedQueueConnectionCommitTest
  fails due to incorrect exception QPID-3700,
  Committing patch from Weston Price.
@@ -57374,12 +57374,12 @@ index a270253..fdd4888 100644
        finally
        {
 -- 
-1.7.7.6
+1.7.6.5
 
 From 9e5c04df02881e85512e0e0520492f2afd858657 Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Tue, 10 Jan 2012 21:50:37 +0000
-Subject: [PATCH 40/70] Bug 768364 - BURL URLs must be prefixed with 'BURL:'
+Subject: [PATCH 40/79] Bug 768364 - BURL URLs must be prefixed with 'BURL:'
  string in example config file QPID-3744, committing a
  patch by Weston Price.
 
@@ -57418,12 +57418,12 @@ index ee0478a..076e5dc 100644
      <!-- This macro allows us to construct a property name which contains a property expansion -->
      <macrodef name="set-address-property">
 -- 
-1.7.7.6
+1.7.6.5
 
 From 06b7a6d6b87692174772f27d4de4be6987746e17 Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Tue, 10 Jan 2012 15:03:22 +0000
-Subject: [PATCH 41/70] Bug 759235 - Incorrect handling of JMS transacted flag
+Subject: [PATCH 41/79] Bug 759235 - Incorrect handling of JMS transacted flag
  in QpidRAManagedConnection QPID-3733, committing
  patch from Weston Price.
 
@@ -57574,12 +57574,12 @@ index 5f8b769..53896d8 100644
        }
     }
 -- 
-1.7.7.6
+1.7.6.5
 
 From 4c71f476b59230e63381cc6fe146cc3b0afe55a2 Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Tue, 10 Jan 2012 15:59:27 +0000
-Subject: [PATCH 42/70] Bug 773348 - QpidRAMessage incorrectly calls
+Subject: [PATCH 42/79] Bug 773348 - QpidRAMessage incorrectly calls
  getSession to determine if underlying JMS session has
  been closed. QPID-3731, committing patch from Weston
  Price.
@@ -57604,12 +57604,12 @@ index 691fe8c..295a453 100644
     }
  
 -- 
-1.7.7.6
+1.7.6.5
 
 From 9515f49cf3c71206cd3e64f63b1d0e31acee4112 Mon Sep 17 00:00:00 2001
 From: Ted Ross <tross@redhat.com>
 Date: Thu, 12 Jan 2012 14:23:56 -0500
-Subject: [PATCH 43/70] Bug 768366 - Wrong version in qpid adapter property in
+Subject: [PATCH 43/79] Bug 768366 - Wrong version in qpid adapter property in
  JCA example
 
 ---
@@ -57628,12 +57628,12 @@ index 5ac1d50..2a8d6cf 100644
 +  <property name="qpid.ver" value="0.14"/>
  </project>
 -- 
-1.7.7.6
+1.7.6.5
 
 From 0d7550624ad9512afa42863a54efba0d367e2362 Mon Sep 17 00:00:00 2001
 From: Keith Wall <kwall@apache.org>
 Date: Sat, 7 Jan 2012 09:44:58 +0000
-Subject: [PATCH 44/70] Bug 782774, QPID-3715: Fix the receiving of an empty
+Subject: [PATCH 44/79] Bug 782774, QPID-3715: Fix the receiving of an empty
  ObjectMessage (without a body)
 
 Applied patch from Oleksandr Rudyy<orudyy@gmail.com>
@@ -58106,12 +58106,12 @@ index 147a03b..fa16152 100644
 +
  }
 -- 
-1.7.7.6
+1.7.6.5
 
 From 36e96d62bbc2385e56fa3a517aef95ab72360ae2 Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Tue, 17 Jan 2012 21:57:57 +0000
-Subject: [PATCH 45/70] Bug 782454, QPID-3763: Committing a patch by Weston
+Subject: [PATCH 45/79] Bug 782454, QPID-3763: Committing a patch by Weston
  Price.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1232605 13f79535-47bb-0310-9956-ffa450edef68
@@ -58133,12 +58133,12 @@ index b503c42..806e771 100644
  
              ConnectionSettings conSettings = retriveConnectionSettings(brokerDetail);
 -- 
-1.7.7.6
+1.7.6.5
 
 From c1d751fc5e886558283e03b729df5347415dc0f0 Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Tue, 17 Jan 2012 22:15:21 +0000
-Subject: [PATCH 46/70] Bug 782693, QPID-3764: Committing a patch by Weston
+Subject: [PATCH 46/79] Bug 782693, QPID-3764: Committing a patch by Weston
  Price.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1232611 13f79535-47bb-0310-9956-ffa450edef68
@@ -58215,12 +58215,12 @@ index b927aaa..3957fa9 100644
 +
  }
 -- 
-1.7.7.6
+1.7.6.5
 
 From d49fac63872bdfdf5aa7b169eb19c50bd84caf85 Mon Sep 17 00:00:00 2001
 From: Robert Gemmell <robbie@apache.org>
 Date: Fri, 6 Jan 2012 11:28:35 +0000
-Subject: [PATCH 47/70] Bug 768384, QPID-3716: restore throwing of
+Subject: [PATCH 47/79] Bug 768384, QPID-3716: restore throwing of
  IllegalStateException upon invoking
  Session#getTransacted() on a closed session
 
@@ -58390,12 +58390,12 @@ index 653ab8f..3c0f951 100644
      {
          expect(text, msg, false);
 -- 
-1.7.7.6
+1.7.6.5
 
 From 37bcf329d2709f0b20f60d8129c6c0b3b0f2cdce Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Thu, 26 Jan 2012 14:38:51 +0000
-Subject: [PATCH 48/70] Bug 768369, QPID-3783: The AddressParser will now set
+Subject: [PATCH 48/79] Bug 768369, QPID-3783: The AddressParser will now set
  the subject to Null if it equals to None. The only
  drawback is that if somebody wants to use a subject
  called "None" which is hard to imagine :) However
@@ -58424,12 +58424,12 @@ index 7b31436..9fb30f9 100644
          else
          {
 -- 
-1.7.7.6
+1.7.6.5
 
 From 350ab69d1d855eb44932aac8c2a131cdc7d381e5 Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Thu, 26 Jan 2012 14:43:20 +0000
-Subject: [PATCH 49/70] Bug 768369, QPID-3265: This is not a fix for this
+Subject: [PATCH 49/79] Bug 768369, QPID-3265: This is not a fix for this
  issue, but rather a minor step towards it. It's
  incorrect to add the binding for the temp queue to
  the bindings object as if the destination is used
@@ -58461,12 +58461,12 @@ index 88cdf38..21d66c3 100644
                  null,dest.getExchangeName(),dest, false);
      }
 -- 
-1.7.7.6
+1.7.6.5
 
 From 96299929c1b0ef4f25fab50b08a13ad1a5bbb11a Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Thu, 26 Jan 2012 19:24:29 +0000
-Subject: [PATCH 50/70] Bug 768369, QPID-3786: Setting queueName, exchange and
+Subject: [PATCH 50/79] Bug 768369, QPID-3786: Setting queueName, exchange and
  routingKey from information given in the incomming
  message.
 
@@ -58514,12 +58514,12 @@ index f360b54..57a3505 100644
          catch(Exception e)
          {
 -- 
-1.7.7.6
+1.7.6.5
 
 From 5ee6c709f29b3d85e461955ba6e268e7b946db5a Mon Sep 17 00:00:00 2001
 From: Michael Goulish <mgoulish@apache.org>
 Date: Fri, 27 Jan 2012 16:18:01 +0000
-Subject: [PATCH 51/70] Bug 752381, QPID-3778: md5 connection abort fix for
+Subject: [PATCH 51/79] Bug 752381, QPID-3778: md5 connection abort fix for
  previous fix. This one doesn't break  
  qpid.tests.connection.ConnectionTest.testCloseGet  
  and  
@@ -58562,12 +58562,12 @@ index 7dbefb8..f2c83d1 100644
          if self.aborted():
            self.close_code = (None, "connection timed out")
 -- 
-1.7.7.6
+1.7.6.5
 
 From b23e0a1d6cfc7cc8b7d3c2468015dc8522784fa4 Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Mon, 30 Jan 2012 19:25:50 -0500
-Subject: [PATCH 52/70] Bug 768369: getQueueName returns null
+Subject: [PATCH 52/79] Bug 768369: getQueueName returns null
 
 ---
  .../org/apache/qpid/client/QueueSenderAdapter.java |   35 ++++++++++++++++++++
@@ -58627,12 +58627,12 @@ index 295c6a4..9a95a16 100644
         {
             if (_delegate.getSession().isStrictAMQP())
 -- 
-1.7.7.6
+1.7.6.5
 
 From 53194e4ae31d2d1039d647224e822936d485dbd4 Mon Sep 17 00:00:00 2001
 From: Rajith Muditha Attapattu <rajith@apache.org>
 Date: Wed, 18 Jan 2012 18:38:58 +0000
-Subject: [PATCH 53/70] Bug 785014, QPID-3688: Added a default constructor and
+Subject: [PATCH 53/79] Bug 785014, QPID-3688: Added a default constructor and
  allowed the destination string to be set and
  retrivied via a setter & getter.
 
@@ -58738,12 +58738,12 @@ index 780dbca..5969d9a 100644
       * Constructor for use in creating a topic using a BindingURL.
       *
 -- 
-1.7.7.6
+1.7.6.5
 
 From 35899a0be064d59bab55879ebf3e3263a35e4155 Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Wed, 1 Feb 2012 11:13:19 -0500
-Subject: [PATCH 54/70] Bug 785014: Unable to create QueueBrowsers from
+Subject: [PATCH 54/79] Bug 785014: Unable to create QueueBrowsers from
  destinations defined in the jndi.properties file
 
 Impact: This only affects queue browsers and is a workaround to ensure
@@ -58805,12 +58805,12 @@ index c357d3c..55fccb4 100644
      }
  
 -- 
-1.7.7.6
+1.7.6.5
 
 From 69d507c60d42fb7842a5291549d23008ba31e528 Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Wed, 1 Feb 2012 22:26:44 -0500
-Subject: [PATCH 55/70] QPID-3733: QpidRAManagedConnection setup() method is
+Subject: [PATCH 55/79] QPID-3733: QpidRAManagedConnection setup() method is
  incorrect for non-XA transaction state as well as
  username/password
 
@@ -59091,12 +59091,12 @@ index 53896d8..eccf77a 100644
  
          _connection.setExceptionListener(this);
 -- 
-1.7.7.6
+1.7.6.5
 
 From e8f3876695114f9b99797ca89f63dadf09b99a3a Mon Sep 17 00:00:00 2001
 From: Kenneth Anthony Giusti <kgiusti@apache.org>
 Date: Thu, 2 Feb 2012 14:41:26 +0000
-Subject: [PATCH 56/70] Bug 773700, QPID-3798: do not wait indefinately for
+Subject: [PATCH 56/79] Bug 773700, QPID-3798: do not wait indefinately for
  connection close.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1239648 13f79535-47bb-0310-9956-ffa450edef68
@@ -59127,12 +59127,12 @@ index e8be643..0d72dc7 100644
        pass
      self.conn = None
 -- 
-1.7.7.6
+1.7.6.5
 
 From 0183ab10f880d0a89fae0b55008273947be00ee7 Mon Sep 17 00:00:00 2001
 From: Kenneth Anthony Giusti <kgiusti@apache.org>
 Date: Thu, 2 Feb 2012 23:46:35 +0000
-Subject: [PATCH 57/70] Bug 786875, QPID-3804: do not skip released grouped
+Subject: [PATCH 57/79] Bug 786875, QPID-3804: do not skip released grouped
  messages
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1239939 13f79535-47bb-0310-9956-ffa450edef68
@@ -59215,12 +59215,12 @@ index 99d1115..4d6d77a 100644
      """
      Tests for the behavior of sticky-consumer message groups.  These tests
 -- 
-1.7.7.6
+1.7.6.5
 
 From 5a22aa991fc1986d759c0ceaa373fcd7122d6e90 Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Tue, 14 Feb 2012 15:46:30 -0500
-Subject: [PATCH 58/70] Bug 787134, QPID-3836: TCK: Subscriptions with nolocal
+Subject: [PATCH 58/79] Bug 787134, QPID-3836: TCK: Subscriptions with nolocal
  flag set receives message from different sessions
 
 ---
@@ -59402,12 +59402,12 @@ index 6759b43..5fd325e 100644
      {
          throw new UnsupportedOperationException("The new addressing based sytanx is "
 -- 
-1.7.7.6
+1.7.6.5
 
 From db3f69f513a63e02e6c9fad99cbd696ecf8935ce Mon Sep 17 00:00:00 2001
 From: Keith Wall <kwall@apache.org>
 Date: Mon, 7 Nov 2011 11:04:22 +0000
-Subject: [PATCH 59/70] Bug 787146, QPID-3536: 0-10 overrides JMS AcceptMode
+Subject: [PATCH 59/79] Bug 787146, QPID-3536: 0-10 overrides JMS AcceptMode
  with a defaulted (not explicitly set) Link
  Reliability of UNRELIABLE
 
@@ -59697,12 +59697,12 @@ index 8c3c247..45af260 100644
 +    }
  }
 -- 
-1.7.7.6
+1.7.6.5
 
 From c689287a3ba6d2087fc2a7eff4e5ea5d0c2994d0 Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Thu, 23 Feb 2012 15:56:52 -0500
-Subject: [PATCH 60/70] Bug 796907: Improve performance of known-complete
+Subject: [PATCH 60/79] Bug 796907: Improve performance of known-complete
  processing
 
 ---
@@ -59953,12 +59953,12 @@ index ad45d00..e79c9fe 100644
 +
 +
 -- 
-1.7.7.6
+1.7.6.5
 
 From 45251299a50ee5b5eef781f074cfa6d1cd3b015b Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Thu, 23 Feb 2012 16:50:14 -0500
-Subject: [PATCH 61/70] Bug 796932: Make logging more performant
+Subject: [PATCH 61/79] Bug 796932: Make logging more performant
 
 ---
  .../java/org/apache/qpid/client/AMQConnection.java |   24 +++++++--
@@ -60370,12 +60370,12 @@ index b7253e6..2d7d431 100644
          _methodRegistry = MethodRegistry.getMethodRegistry(pv);
          _methodDispatcher = ClientMethodDispatcherImpl.newMethodDispatcher(pv, this);
 -- 
-1.7.7.6
+1.7.6.5
 
 From c4cf1fb41c4d86912da257a1b5e85492a65238bf Mon Sep 17 00:00:00 2001
 From: Gordon Sim <gsim@apache.org>
 Date: Tue, 14 Feb 2012 15:39:13 +0000
-Subject: [PATCH 62/70] Bug 795399, QPID-3839: Allow browsers to accept
+Subject: [PATCH 62/79] Bug 795399, QPID-3839: Allow browsers to accept
  messages
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1244002 13f79535-47bb-0310-9956-ffa450edef68
@@ -60397,12 +60397,12 @@ index 715376f..2d05755 100644
          acceptTracker.delivered(transfer->getDestination(), command->getId());
      }
 -- 
-1.7.7.6
+1.7.6.5
 
 From 11cc64fb6f4ce2216bef0a7409d8153cc94091a7 Mon Sep 17 00:00:00 2001
 From: Ted Ross <tross@apache.org>
 Date: Fri, 27 Jan 2012 20:03:54 +0000
-Subject: [PATCH 63/70] Bug 797426, QPID-3787: Fixed shutdown crash in
+Subject: [PATCH 63/79] Bug 797426, QPID-3787: Fixed shutdown crash in
  SslPlugin, Fixed problem with sasl_mux test.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1236864 13f79535-47bb-0310-9956-ffa450edef68
@@ -60477,12 +60477,12 @@ index 6722149..4dbb7df 100755
  stop_brokers
  
 -- 
-1.7.7.6
+1.7.6.5
 
 From 135e1eb91c4bd93db0e6f72dea4cc81250283b54 Mon Sep 17 00:00:00 2001
 From: Kenneth Anthony Giusti <kgiusti@apache.org>
 Date: Fri, 2 Mar 2012 14:49:56 +0000
-Subject: [PATCH 64/70] Bug 791249, QPID-3877: hold lock during message header
+Subject: [PATCH 64/79] Bug 791249, QPID-3877: hold lock during message header
  encode.
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1296230 13f79535-47bb-0310-9956-ffa450edef68
@@ -60527,12 +60527,12 @@ index d13109d..e968687 100644
          CloneHeaderBody f;
          frames.map_if(f, TypeFilter<HEADER_BODY>());
 -- 
-1.7.7.6
+1.7.6.5
 
 From 49017d01c8e059dbb72626c8dec33444ffc0134d Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Mon, 5 Mar 2012 15:17:18 -0500
-Subject: [PATCH 65/70] Bug 798236:  Memory leak when publishing to LVQ and
+Subject: [PATCH 65/79] Bug 798236:  Memory leak when publishing to LVQ and
  consuming/browsing in parallel
 
 ---
@@ -60555,12 +60555,12 @@ index 0b8fe95..837008c 100644
          QPID_LOG(debug, "Accepted " << id);
      }
 -- 
-1.7.7.6
+1.7.6.5
 
 From b810ec7bd88b90dd2b1092e380005a660e82c643 Mon Sep 17 00:00:00 2001
 From: Kenneth Anthony Giusti <kgiusti@apache.org>
 Date: Thu, 15 Mar 2012 09:27:42 -0400
-Subject: [PATCH 66/70] Bug 801310: qpidd crashes while qpid-perftest --mode
+Subject: [PATCH 66/79] Bug 801310: qpidd crashes while qpid-perftest --mode
  fanout / topic in qpid::broker::Message::encode() ->
  map_if<> -> operator()
 
@@ -60617,12 +60617,12 @@ index e968687..718cf6c 100644
          frames.remove(TypeFilter<CONTENT_BODY>());
          setContentReleased();
 -- 
-1.7.7.6
+1.7.6.5
 
 From 676e4ab696208f661b4b649a55a65cdce8b7cc40 Mon Sep 17 00:00:00 2001
 From: Kenneth Anthony Giusti <kgiusti@apache.org>
 Date: Thu, 15 Mar 2012 09:40:17 -0400
-Subject: [PATCH 67/70] Bug 800028, QPID-3896: clustered qpidd aborts in
+Subject: [PATCH 67/79] Bug 800028, QPID-3896: clustered qpidd aborts in
  qpid::broker::ConnectionHandler::handle() -> operator
  () -> __cxa_pure_virtual () -> terminate ()
 
@@ -60657,12 +60657,12 @@ index 4627b14..6641794 100644
          QPID_LOG(debug, "Timed auto-delete for " << queue->getName() << " initiated");
      } else {
 -- 
-1.7.7.6
+1.7.6.5
 
 From cf0d55b61010cb270ce78aeef4ebad2213a11ca3 Mon Sep 17 00:00:00 2001
 From: Michael Goulish <mgoulish@apache.org>
 Date: Wed, 14 Mar 2012 14:33:28 +0000
-Subject: [PATCH 68/70] Bug 790563, QPID-3898: Python client is disconnected
+Subject: [PATCH 68/79] Bug 790563, QPID-3898: Python client is disconnected
  from the broker shortly after connection over ssl
 
 When connecting through SSL, qpid-tool starts disconnecting and
@@ -60713,12 +60713,12 @@ index f2c83d1..66e1cb4 100644
        seg_dec.write(*frame_dec.read())
        op_dec.write(*seg_dec.read())
 -- 
-1.7.7.6
+1.7.6.5
 
 From a1ded636c34a37c46a65eae74dae00fc5f4fc396 Mon Sep 17 00:00:00 2001
 From: Justin Ross <jross@redhat.com>
 Date: Tue, 20 Mar 2012 16:09:55 -0400
-Subject: [PATCH 69/70] Bug 800028, QPID-3896: clustered qpidd aborts in
+Subject: [PATCH 69/79] Bug 800028, QPID-3896: clustered qpidd aborts in
  qpid::broker::ConnectionHandler::handle() -> operator
  () -> __cxa_pure_virtual () -> terminate ()
 
@@ -60775,12 +60775,12 @@ index b4f7d00..90e4fa9 100644
      if (i == map.end())
          throw Exception(QPID_MSG("Cluster timer wakeup non-existent task " << name));
 -- 
-1.7.7.6
+1.7.6.5
 
 From c20cff6dcb1454ed9fbec8dbe575f439264f4d85 Mon Sep 17 00:00:00 2001
 From: Clifford Allan Jansen <cliffjansen@apache.org>
 Date: Mon, 19 Mar 2012 23:24:23 +0000
-Subject: [PATCH 70/70] Bug 781560, QPID-3759: hang on heartbeat connection
+Subject: [PATCH 70/79] Bug 781560, QPID-3759: hang on heartbeat connection
  close
 
 git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1302718 13f79535-47bb-0310-9956-ffa450edef68
@@ -60868,5 +60868,456 @@ index 30378d4..fb8df5d 100644
  
  } // namespace windows
 -- 
-1.7.7.6
+1.7.6.5
 
+From a957842fcfd4451b3500949363dbd1e8086072a7 Mon Sep 17 00:00:00 2001
+From: Clifford Allan Jansen <cliffjansen@apache.org>
+Date: Thu, 29 Mar 2012 00:14:12 +0000
+Subject: [PATCH 71/79] Bug 781560, QPID-3759: reworked fix to be compatible
+ with XP
+
+git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1306654 13f79535-47bb-0310-9956-ffa450edef68
+---
+ qpid/cpp/src/qpid/sys/windows/AsynchIO.cpp |   27 ++++++++++++---------------
+ 1 files changed, 12 insertions(+), 15 deletions(-)
+
+diff --git a/qpid/cpp/src/qpid/sys/windows/AsynchIO.cpp b/qpid/cpp/src/qpid/sys/windows/AsynchIO.cpp
+index fb8df5d..5e52944 100644
+--- a/qpid/cpp/src/qpid/sys/windows/AsynchIO.cpp
++++ b/qpid/cpp/src/qpid/sys/windows/AsynchIO.cpp
+@@ -291,12 +291,12 @@ private:
+     volatile LONG opsInProgress;
+     // Is there a write in progress?
+     volatile bool writeInProgress;
++    // Or a read?
++    volatile bool readInProgress;
+     // Deletion requested, but there are callbacks in progress.
+     volatile bool queuedDelete;
+     // Socket close requested, but there are operations in progress.
+     volatile bool queuedClose;
+-    // Most recent asynch read request
+-    volatile AsynchReadResult* pendingRead;
+ 
+ private:
+     // Dispatch events that have completed.
+@@ -374,9 +374,9 @@ AsynchIO::AsynchIO(const Socket& s,
+     socket(s),
+     opsInProgress(0),
+     writeInProgress(false),
++    readInProgress(false),
+     queuedDelete(false),
+     queuedClose(false),
+-    pendingRead(0),
+     working(false) {
+ }
+ 
+@@ -492,6 +492,7 @@ void AsynchIO::startReading() {
+                                  readCount);
+         DWORD bytesReceived = 0, flags = 0;
+         InterlockedIncrement(&opsInProgress);
++        readInProgress = true;
+         int status = WSARecv(toSocketHandle(socket),
+                              const_cast<LPWSABUF>(result->getWSABUF()), 1,
+                              &bytesReceived,
+@@ -507,7 +508,6 @@ void AsynchIO::startReading() {
+             }
+         }
+         // On status 0 or WSA_IO_PENDING, completion will handle the rest.
+-        pendingRead = result;
+     }
+     else {
+         notifyBuffersEmpty();
+@@ -620,6 +620,7 @@ void AsynchIO::close(void) {
+ void AsynchIO::readComplete(AsynchReadResult *result) {
+     int status = result->getStatus();
+     size_t bytes = result->getTransferred();
++    readInProgress = false;
+     if (status == 0 && bytes > 0) {
+         if (readCallback)
+             readCallback(*this, result->getBuff());
+@@ -630,7 +631,7 @@ void AsynchIO::readComplete(AsynchReadResult *result) {
+         // so "unread" it back to the front of the queue.
+         unread(result->getBuff());
+         if (queuedClose && status == ERROR_OPERATION_ABORTED) {
+-            return; // Expected reap from CancelIoEx
++            return; // Expected draining of cancelled read on close
+         }
+         notifyEof();
+         if (status != 0)
+@@ -702,11 +703,8 @@ void AsynchIO::completion(AsynchIoResult *result) {
+             {
+                 ScopedUnlock<Mutex> ul(completionLock);
+                 AsynchReadResult *r = dynamic_cast<AsynchReadResult*>(result);
+-                if (r != 0) {
++                if (r != 0)
+                     readComplete(r);
+-                    // Set pendingRead to 0 if it's still pointing to (newly completed) r
+-                    InterlockedCompareExchangePointer((void * volatile *)&pendingRead, 0, r);
+-                }
+                 else {
+                     AsynchWriteResult *w =
+                         dynamic_cast<AsynchWriteResult*>(result);
+@@ -741,12 +739,11 @@ void AsynchIO::completion(AsynchIoResult *result) {
+             delete this;
+     }
+     else {
+-        if (queuedClose && pendingRead) {
+-            // Force outstanding read to completion.  Layer above will
+-            // call back.
+-            CancelIoEx((HANDLE)toSocketHandle(socket),
+-                       ((AsynchReadResult *)pendingRead)->overlapped());
+-            pendingRead = 0;
++        if (queuedClose && opsInProgress == 1 && readInProgress) {
++            // Cancel outstanding read and force to completion.  Layer
++            // above will call back for official close.  CancelIoEX()
++            // is not available in XP so we make do with closesocket().
++            socket.close();
+         }
+     }
+ }
+-- 
+1.7.6.5
+
+From 93ed2c59b06e6fdd3ed0d8f48992da0b9654e65b Mon Sep 17 00:00:00 2001
+From: Ted Ross <tross@apache.org>
+Date: Fri, 20 Apr 2012 20:43:14 +0000
+Subject: [PATCH 77/79] Bug 703563 - Allow altering location of qpid client
+ config file QPID-3510 - Allow client
+ configuration-file to be overridden via QPID_CONFIG
+ env variable.
+
+git-svn-id: https://svn.apache.org/repos/asf/qpid/trunk@1328494 13f79535-47bb-0310-9956-ffa450edef68
+(cherry picked from commit 48ca9982f8a1697bc47dc253c5656382bc4e3691)
+---
+ qpid/cpp/src/qpid/client/ConnectionImpl.cpp |    4 +++-
+ qpid/cpp/src/qpid/client/LoadPlugins.cpp    |    6 ++++--
+ qpid/cpp/src/qpid/client/SslConnector.cpp   |    4 +++-
+ 3 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/qpid/cpp/src/qpid/client/ConnectionImpl.cpp b/qpid/cpp/src/qpid/client/ConnectionImpl.cpp
+index db97f1e..963e56b 100644
+--- a/qpid/cpp/src/qpid/client/ConnectionImpl.cpp
++++ b/qpid/cpp/src/qpid/client/ConnectionImpl.cpp
+@@ -115,8 +115,10 @@ public:
+         ioThreads(0),
+         connections(0)
+     {
++        CommonOptions common("", QPIDC_CONF_FILE);
+         IOThreadOptions options(c);
+-        options.parse(0, 0, QPIDC_CONF_FILE, true);
++        common.parse(0, 0, common.config, true);
++        options.parse(0, 0, common.config, true);
+         maxIOThreads = (options.maxIOThreads != -1) ?
+             options.maxIOThreads : 1;
+     }
+diff --git a/qpid/cpp/src/qpid/client/LoadPlugins.cpp b/qpid/cpp/src/qpid/client/LoadPlugins.cpp
+index 246eb60..a8cfe80 100644
+--- a/qpid/cpp/src/qpid/client/LoadPlugins.cpp
++++ b/qpid/cpp/src/qpid/client/LoadPlugins.cpp
+@@ -39,10 +39,12 @@ namespace {
+ 
+ struct LoadtimeInitialise {
+     LoadtimeInitialise() {
++        CommonOptions common("", QPIDC_CONF_FILE);
+         qpid::ModuleOptions moduleOptions(QPIDC_MODULE_DIR);
+         string              defaultPath (moduleOptions.loadDir);
+-        moduleOptions.parse (0, 0, QPIDC_CONF_FILE, true);
+-    
++        common.parse(0, 0, common.config, true);
++        moduleOptions.parse (0, 0, common.config, true);
++
+         for (vector<string>::iterator iter = moduleOptions.load.begin();
+              iter != moduleOptions.load.end();
+              iter++)
+diff --git a/qpid/cpp/src/qpid/client/SslConnector.cpp b/qpid/cpp/src/qpid/client/SslConnector.cpp
+index 6b6bf88..70f1b67 100644
+--- a/qpid/cpp/src/qpid/client/SslConnector.cpp
++++ b/qpid/cpp/src/qpid/client/SslConnector.cpp
+@@ -148,8 +148,10 @@ namespace {
+     struct StaticInit {
+         StaticInit() {
+             try {
++                CommonOptions common("", QPIDC_CONF_FILE);
+                 SslOptions options;
+-                options.parse (0, 0, QPIDC_CONF_FILE, true);
++                common.parse(0, 0, common.config, true);
++                options.parse (0, 0, common.config, true);
+                 if (options.certDbPath.empty()) {
+                     QPID_LOG(info, "SSL connector not enabled, you must set QPID_SSL_CERT_DB to enable it.");
+                 } else {
+-- 
+1.7.6.5
+
+From 75e3d01989a5f54d2f711d2fc750484dfc407bb6 Mon Sep 17 00:00:00 2001
+From: Ted Ross <tross@redhat.com>
+Date: Tue, 24 Apr 2012 17:08:30 -0400
+Subject: [PATCH 78/79] Bug 703563 - Allow altering location of qpid client
+ config file Cherry-picked (manually) from Subversion
+ revision 1329236.
+
+---
+ qpid/cpp/include/qpid/Options.h             |    4 +++-
+ qpid/cpp/src/Makefile.am                    |    2 +-
+ qpid/cpp/src/posix/QpiddBroker.cpp          |    4 ++--
+ qpid/cpp/src/qpid/Options.cpp               |    7 ++++---
+ qpid/cpp/src/qpid/client/ConnectionImpl.cpp |    6 +++---
+ qpid/cpp/src/qpid/client/LoadPlugins.cpp    |    6 +++---
+ qpid/cpp/src/qpid/client/SslConnector.cpp   |    6 +++---
+ qpid/cpp/src/windows/QpiddBroker.cpp        |    4 ++--
+ 8 files changed, 21 insertions(+), 18 deletions(-)
+
+diff --git a/qpid/cpp/include/qpid/Options.h b/qpid/cpp/include/qpid/Options.h
+index 63d91c2..9860076 100644
+--- a/qpid/cpp/include/qpid/Options.h
++++ b/qpid/cpp/include/qpid/Options.h
+@@ -163,10 +163,12 @@ struct Options : public po::options_description {
+  */
+ struct CommonOptions : public Options {
+     QPID_COMMON_EXTERN CommonOptions(const std::string& name=std::string(),
+-                  const std::string& configfile=std::string());
++                                     const std::string& configfile=std::string(),
++                                     const std::string& clientConfigFile=std::string());
+     bool help;
+     bool version;
+     std::string config;
++    std::string clientConfig;
+ };
+ 
+ 
+diff --git a/qpid/cpp/src/Makefile.am b/qpid/cpp/src/Makefile.am
+index c330217..de172da 100644
+--- a/qpid/cpp/src/Makefile.am
++++ b/qpid/cpp/src/Makefile.am
+@@ -136,7 +136,7 @@ tmoduleexec_LTLIBRARIES=
+ AM_CXXFLAGS += -DBOOST_FILESYSTEM_VERSION=2
+ 
+ ## Automake macros to build libraries and executables.
+-qpidd_CXXFLAGS = $(AM_CXXFLAGS) -DQPIDD_MODULE_DIR=\"$(dmoduleexecdir)\" -DQPIDD_CONF_FILE=\"$(sysconfdir)/qpidd.conf\"
++qpidd_CXXFLAGS = $(AM_CXXFLAGS) -DQPIDD_MODULE_DIR=\"$(dmoduleexecdir)\" -DQPIDD_CONF_FILE=\"$(sysconfdir)/qpidd.conf\" -DQPIDC_CONF_FILE=\"$(confdir)/qpidc.conf\"
+ libqpidclient_la_CXXFLAGS = $(AM_CXXFLAGS) -DQPIDC_MODULE_DIR=\"$(cmoduleexecdir)\" -DQPIDC_CONF_FILE=\"$(confdir)/qpidc.conf\"
+ 
+ qpidd_LDADD =					\
+diff --git a/qpid/cpp/src/posix/QpiddBroker.cpp b/qpid/cpp/src/posix/QpiddBroker.cpp
+index 1cebcfc..a809066 100644
+--- a/qpid/cpp/src/posix/QpiddBroker.cpp
++++ b/qpid/cpp/src/posix/QpiddBroker.cpp
+@@ -38,7 +38,7 @@ using qpid::broker::Daemon;
+ 
+ BootstrapOptions::BootstrapOptions(const char* argv0)
+   : qpid::Options("Options"),
+-    common("", QPIDD_CONF_FILE),
++    common("", QPIDD_CONF_FILE, QPIDC_CONF_FILE),
+     module(QPIDD_MODULE_DIR),
+     log(argv0)
+ {
+@@ -90,7 +90,7 @@ struct QpiddPosixOptions : public QpiddOptionsPrivate {
+ 
+ QpiddOptions::QpiddOptions(const char* argv0)
+   : qpid::Options("Options"),
+-    common("", QPIDD_CONF_FILE),
++    common("", QPIDD_CONF_FILE, QPIDC_CONF_FILE),
+     module(QPIDD_MODULE_DIR),
+     log(argv0)
+ {
+diff --git a/qpid/cpp/src/qpid/Options.cpp b/qpid/cpp/src/qpid/Options.cpp
+index 4b13e34..35787aa 100644
+--- a/qpid/cpp/src/qpid/Options.cpp
++++ b/qpid/cpp/src/qpid/Options.cpp
+@@ -186,13 +186,14 @@ void Options::parse(int argc, char const* const* argv, const std::string& config
+     }
+ }
+ 
+-CommonOptions::CommonOptions(const string& name, const string& configfile)
+-    : Options(name), config(configfile)
++CommonOptions::CommonOptions(const string& name, const string& configfile, const string& clientfile)
++    : Options(name), config(configfile), clientConfig(clientfile)
+ {
+     addOptions()
+         ("help,h", optValue(help), "Displays the help message")
+         ("version,v", optValue(version), "Displays version information")
+-        ("config", optValue(config, "FILE"), "Reads configuration from FILE");
++        ("config", optValue(config, "FILE"), "Reads configuration from FILE")
++        ("client-config", optValue(clientConfig, "FILE"), "Reads client configuration from FILE (for cluster interconnect)");
+ }
+ 
+ 
+diff --git a/qpid/cpp/src/qpid/client/ConnectionImpl.cpp b/qpid/cpp/src/qpid/client/ConnectionImpl.cpp
+index 963e56b..85b0e83 100644
+--- a/qpid/cpp/src/qpid/client/ConnectionImpl.cpp
++++ b/qpid/cpp/src/qpid/client/ConnectionImpl.cpp
+@@ -115,10 +115,10 @@ public:
+         ioThreads(0),
+         connections(0)
+     {
+-        CommonOptions common("", QPIDC_CONF_FILE);
++        CommonOptions common("", "", QPIDC_CONF_FILE);
+         IOThreadOptions options(c);
+-        common.parse(0, 0, common.config, true);
+-        options.parse(0, 0, common.config, true);
++        common.parse(0, 0, common.clientConfig, true);
++        options.parse(0, 0, common.clientConfig, true);
+         maxIOThreads = (options.maxIOThreads != -1) ?
+             options.maxIOThreads : 1;
+     }
+diff --git a/qpid/cpp/src/qpid/client/LoadPlugins.cpp b/qpid/cpp/src/qpid/client/LoadPlugins.cpp
+index a8cfe80..d76e1d4 100644
+--- a/qpid/cpp/src/qpid/client/LoadPlugins.cpp
++++ b/qpid/cpp/src/qpid/client/LoadPlugins.cpp
+@@ -39,11 +39,11 @@ namespace {
+ 
+ struct LoadtimeInitialise {
+     LoadtimeInitialise() {
+-        CommonOptions common("", QPIDC_CONF_FILE);
++        CommonOptions common("", "", QPIDC_CONF_FILE);
+         qpid::ModuleOptions moduleOptions(QPIDC_MODULE_DIR);
+         string              defaultPath (moduleOptions.loadDir);
+-        common.parse(0, 0, common.config, true);
+-        moduleOptions.parse (0, 0, common.config, true);
++        common.parse(0, 0, common.clientConfig, true);
++        moduleOptions.parse (0, 0, common.clientConfig, true);
+ 
+         for (vector<string>::iterator iter = moduleOptions.load.begin();
+              iter != moduleOptions.load.end();
+diff --git a/qpid/cpp/src/qpid/client/SslConnector.cpp b/qpid/cpp/src/qpid/client/SslConnector.cpp
+index 70f1b67..ab0c5c4 100644
+--- a/qpid/cpp/src/qpid/client/SslConnector.cpp
++++ b/qpid/cpp/src/qpid/client/SslConnector.cpp
+@@ -148,10 +148,10 @@ namespace {
+     struct StaticInit {
+         StaticInit() {
+             try {
+-                CommonOptions common("", QPIDC_CONF_FILE);
++                CommonOptions common("", "", QPIDC_CONF_FILE);
+                 SslOptions options;
+-                common.parse(0, 0, common.config, true);
+-                options.parse (0, 0, common.config, true);
++                common.parse(0, 0, common.clientConfig, true);
++                options.parse (0, 0, common.clientConfig, true);
+                 if (options.certDbPath.empty()) {
+                     QPID_LOG(info, "SSL connector not enabled, you must set QPID_SSL_CERT_DB to enable it.");
+                 } else {
+diff --git a/qpid/cpp/src/windows/QpiddBroker.cpp b/qpid/cpp/src/windows/QpiddBroker.cpp
+index 42ba97b..ef4ef43 100644
+--- a/qpid/cpp/src/windows/QpiddBroker.cpp
++++ b/qpid/cpp/src/windows/QpiddBroker.cpp
+@@ -36,7 +36,7 @@ using namespace qpid::broker;
+ 
+ BootstrapOptions::BootstrapOptions(const char* argv0)
+   : qpid::Options("Options"),
+-    common("", QPIDD_CONF_FILE),
++    common("", QPIDD_CONF_FILE, QPIDC_CONF_FILE),
+     module(QPIDD_MODULE_DIR),
+     log(argv0)
+ {
+@@ -314,7 +314,7 @@ struct QpiddWindowsOptions : public QpiddOptionsPrivate {
+ 
+ QpiddOptions::QpiddOptions(const char* argv0)
+   : qpid::Options("Options"),
+-    common("", QPIDD_CONF_FILE),
++    common("", QPIDD_CONF_FILE, QPIDC_CONF_FILE),
+     module(QPIDD_MODULE_DIR),
+     log(argv0)
+ {
+-- 
+1.7.6.5
+
+From 8ffa2980998fd36040474d72b845ff6afa5dd3c8 Mon Sep 17 00:00:00 2001
+From: Ted Ross <tross@redhat.com>
+Date: Tue, 24 Apr 2012 17:22:58 -0400
+Subject: [PATCH 79/79] Bug 799269 - qpidd should not be enabled by default
+
+---
+ qpid/cpp/etc/qpidd |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/qpid/cpp/etc/qpidd b/qpid/cpp/etc/qpidd
+index 07cbb82..79fb0ee 100755
+--- a/qpid/cpp/etc/qpidd
++++ b/qpid/cpp/etc/qpidd
+@@ -25,8 +25,8 @@
+ # Provides: qpidd
+ # Required-Start: $local_fs
+ # Required-Stop: $local_fs
+-# Default-Start: 2 3 4 5
+-# Default-Stop: 0 1 6
++# Default-Start:
++# Default-Stop: 0 1 2 3 4 5 6
+ # Short-Description: start or stop qpidd
+ # Description: Qpidd is an AMQP broker. It receives, stores, routes and	forwards messages using the AMQP protcol.
+ ### END INIT INFO
+-- 
+1.7.6.5
+
+diff --git a/qpid/cpp/src/qpid/log/Logger.cpp b/qpid/cpp/src/qpid/log/Logger.cpp
+index 1600822..8c995a5 100644
+--- a/qpid/cpp/src/qpid/log/Logger.cpp
++++ b/qpid/cpp/src/qpid/log/Logger.cpp
+@@ -23,7 +23,7 @@
+ #include "qpid/sys/Thread.h"
+ #include "qpid/sys/Time.h"
+ #include "qpid/DisableExceptionLogging.h"
+-#include <boost/pool/detail/singleton.hpp>
++#include <boost/serialization/singleton.hpp>
+ #include <boost/bind.hpp>
+ #include <boost/function.hpp>
+ #include <algorithm>
+@@ -45,7 +45,7 @@ inline void Logger::enable_unlocked(Statement* s) {
+ }
+ 
+ Logger& Logger::instance() {
+-    return boost::details::pool::singleton_default<Logger>::instance();
++    return boost::serialization::singleton<Logger>::get_mutable_instance();
+ }
+ 
+ Logger::Logger() : flags(0) {
+diff --git a/qpid/cpp/src/qpid/sys/windows/AsynchIoResult.h b/qpid/cpp/src/qpid/sys/windows/AsynchIoResult.h
+index b113249..337107c 100755
+--- a/qpid/cpp/src/qpid/sys/windows/AsynchIoResult.h
++++ b/qpid/cpp/src/qpid/sys/windows/AsynchIoResult.h
+@@ -67,7 +67,7 @@ public:
+ protected:
+     AsynchResult() : bytes(0), status(0)
+       { memset(overlapped(), 0, sizeof(OVERLAPPED)); }
+-    ~AsynchResult() {}
++    virtual ~AsynchResult() {}
+     virtual void complete(void) = 0;
+ 
+     size_t bytes;
+diff --git a/qpid/cpp/src/qpid/sys/windows/uuid.cpp b/qpid/cpp/src/qpid/sys/windows/uuid.cpp
+index 3316ecb..9344e51 100644
+--- a/qpid/cpp/src/qpid/sys/windows/uuid.cpp
++++ b/qpid/cpp/src/qpid/sys/windows/uuid.cpp
+@@ -42,16 +42,20 @@ void uuid_generate (uuid_t out) {
+ 
+ int uuid_is_null (const uuid_t uu) {
+     RPC_STATUS unused;
+-    return UuidIsNil ((UUID*)uu, &unused);
++    uuid_t copy;
++    uuid_copy(copy, uu);
++    return UuidIsNil (reinterpret_cast<UUID*>(copy), &unused);
+ }
+ 
+ int uuid_parse (const char *in, uuid_t uu) {
+-    return UuidFromString ((unsigned char*)in, (UUID*)uu) == RPC_S_OK ? 0 : -1;
++    return UuidFromString ((unsigned char*) const_cast<char*>(in), reinterpret_cast<UUID*>(uu)) == RPC_S_OK ? 0 : -1;
+ }
+ 
+ void uuid_unparse (const uuid_t uu, char *out) {
+     unsigned char *formatted;
+-    if (UuidToString((UUID*)uu, &formatted) == RPC_S_OK) {
++    uuid_t copy;
++    uuid_copy(copy, uu);
++    if (UuidToString(reinterpret_cast<UUID*>(copy), &formatted) == RPC_S_OK) {
+ #ifdef _MSC_VER
+         strncpy_s (out, 36+1, (char*)formatted, _TRUNCATE);
+ #else
+@@ -63,5 +67,8 @@ void uuid_unparse (const uuid_t uu, char *out) {
+ 
+ int uuid_compare (const uuid_t a, const uuid_t b) {
+     RPC_STATUS unused;
+-    return !UuidEqual((UUID*)a, (UUID*)b, &unused);
++    uuid_t copy_a, copy_b;
++    uuid_copy(copy_a, a);
++    uuid_copy(copy_b, b);
++    return !UuidEqual(reinterpret_cast<UUID*>(copy_a), reinterpret_cast<UUID*>(copy_b), &unused);
+ }
